@@ -1,0 +1,13 @@
+{
+  "name": "alpha-beta-pruning",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "pre-start": "rm -rf ./.parcel-cache ./.cache ./dist",
+    "start": "npm run pre-start && npx parcel index.html",
+    "clean-up": "rm -rf ./.parcel-cache ./.cache ./dist ./node_modules"
+  },
+  "author": "",
+  "license": "ISC"
+}
