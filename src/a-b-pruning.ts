@@ -4,7 +4,7 @@ class TreeNode {
   nextMove: TreeNode | null = null;
   get isTerminal(): boolean { return this.actions.length === 0; }
 
-  constructor(public utility: number, public actions: TreeNode[], public depth: number) {}
+  constructor(public utility: number, public actions: TreeNode[], public depth: number, public index: number) {}
 }
 
 export function alphaBetaSearch(root: TreeNode) {
@@ -29,8 +29,9 @@ function maxValue(node: TreeNode, alpha: number, beta: number): void {
     if (action.utility > bestVal) {
       bestVal = action.utility;
       bestMove = action;
-      if (bestVal >= node.beta) {
+      if (bestVal >= node.beta && i+1 < node.actions.length) {
         [node.utility, node.nextMove] = [bestVal, bestMove];
+        console.log(`CUTTING, ${node.utility}, ${node.depth}, ${node.index}`);
         return;
       }
       node.alpha = Math.max(node.alpha, bestVal);
@@ -57,8 +58,9 @@ function minValue(node: TreeNode, alpha: number, beta: number): void {
     if (action.utility < bestVal) {
       bestVal = action.utility;
       bestMove = action;
-      if (bestVal <= node.alpha) {
+      if (bestVal <= node.alpha && i+1 < node.actions.length) {
         [node.utility, node.nextMove] = [bestVal, bestMove];
+        console.log(`CUTTING, ${node.utility}, ${node.depth}, ${node.index}`);
         return;
       }
       node.beta = Math.min(node.beta, bestVal);
@@ -68,16 +70,12 @@ function minValue(node: TreeNode, alpha: number, beta: number): void {
   [node.utility, node.nextMove] = [bestVal, bestMove];
 }
 
-type BasicNodeStruct = {
-  utility?: number;
-  actions?: BasicNodeStruct[];
-};
-
-export function createNodes(action: BasicNodeStruct, depth = 0): TreeNode {
+export function createNodes(dataStruct: any[], depth = 0, index = 0): TreeNode {
   const node = new TreeNode(
-    action.utility ?? NaN,
-    action.actions?.map((action) => createNodes(action, depth + 1)) ?? [],
-    depth
+    typeof dataStruct[0] === 'number' ? dataStruct[0] : NaN,
+    dataStruct[0] instanceof Array ? dataStruct.map((action, i) => createNodes(action, depth + 1, i)) : [],
+    depth,
+    index
   );
 
   return node;

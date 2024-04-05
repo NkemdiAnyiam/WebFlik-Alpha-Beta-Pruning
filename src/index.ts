@@ -1,51 +1,102 @@
 console.log('ALPHA BETA');
 import { createNodes, alphaBetaSearch } from "./a-b-pruning";
 
-const root = createNodes({
-  actions: [
-    {
-      actions: [
-        {utility: 3},
-        {utility: 12},
-        {utility: 8},
+// const root = createNodes([
+//   [
+//     [3],
+//     [12],
+//     [8]
+//   ],
+//   [
+//     [2],
+//     [4],
+//     [6]
+//   ],
+//   [
+//     [14],
+//     [5],
+//     [2]
+//   ]
+// ]);
+
+const rawStruct = [
+  [
+    [
+      [5],
+      [8]
+    ],
+    [
+      [3],
+      [
+        [5],
+        [2],
+        [7],
+        [0]
+      ],
+      [9],
+      [
+        [5],
+        [8],
+        [1]
       ]
-    },
-    {
-      actions: [
-        {utility: 2},
-        {utility: 4},
-        {utility: 6},
+    ],
+    [
+      [7],
+      [
+        [9],
+        [10],
+        [8]
       ]
-    },
-    {
-      actions : [
-        {utility: 14},
-        {utility: 5},
-        {utility: 2},
+    ]
+  ],
+  [
+    [
+      [
+        [3],
+        [6],
+        [4]
+      ],
+      [6],
+      [
+        [10],
+        [3]
       ]
-    }
+    ],
+    [
+      [
+        [8],
+        [13]
+      ],
+      [5],
+      [
+        [10],
+        [8]
+      ]
+    ]
   ]
-});
+];
 
-const queue = [root];
-let recentDepth = root.depth;
-let str = ''
-while (queue.length > 0) {
-  const curr = queue.shift()!;
-  queue.push(...curr.actions);
-  if (recentDepth !== curr.depth) {
-    recentDepth = curr.depth;
-    console.log(str);
-    str = '';
-  }
+const root = createNodes(rawStruct);
 
-  str += `D:${curr.depth}, U:${curr.utility}          `;
-}
-console.log(str);
+// const queue = [root];
+// let recentDepth = root.depth;
+// let str = ''
+// while (queue.length > 0) {
+//   const curr = queue.shift()!;
+//   queue.push(...curr.actions);
+//   if (recentDepth !== curr.depth) {
+//     recentDepth = curr.depth;
+//     console.log(str);
+//     str = '';
+//   }
 
-const move = alphaBetaSearch(root);
-let thing = move;
-while (thing) {
-  console.log(`D:${thing.depth}, U:${thing.utility}`);
-  thing = thing?.nextMove!;
-}
+//   str += `D:${curr.depth}, I:${curr.index}, U:${curr.utility}          `;
+// }
+// console.log(str);
+
+// const move = alphaBetaSearch(root);
+// let thing = move;
+// while (thing) {
+//   console.log(`D:${thing.depth}, I:${thing.index}, U:${thing.utility}`);
+//   thing = thing?.nextMove!;
+// }
