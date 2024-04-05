@@ -1,23 +1,21 @@
 class TreeNode {
   alpha: number = -Infinity;
   beta: number = Infinity;
-  next: TreeNode | null = null;
+  nextMove: TreeNode | null = null;
+  get isTerminal(): boolean { return this.actions.length === 0; }
 
   constructor(public utility: number, public actions: TreeNode[], public depth: number) {}
-  
-  isTerminal(): boolean { return this.actions.length === 0; }
-  setNext(next: TreeNode | null): TreeNode { this.next = next; return this; }
 }
 
 export function alphaBetaSearch(root: TreeNode) {
-  const value = maxValue(root, -Infinity, Infinity);
-  console.log(value);
+  maxValue(root, -Infinity, Infinity);
+  console.log(root.utility);
   return root;
 }
 
-function maxValue(node: TreeNode, alpha: number, beta: number): number {
-  if (node.isTerminal()) {
-    return node.utility;
+function maxValue(node: TreeNode, alpha: number, beta: number): void {
+  if (node.isTerminal) {
+    return;
   }
   node.alpha = alpha;
   node.beta = beta;
@@ -27,25 +25,24 @@ function maxValue(node: TreeNode, alpha: number, beta: number): number {
 
   for (let i = 0; i < node.actions.length; ++i) {
     const action = node.actions[i];
-    const maybeBetterVal = minValue(action, node.alpha, node.beta);
-    if (maybeBetterVal > bestVal) {
-      bestVal = maybeBetterVal;
+    minValue(action, node.alpha, node.beta);
+    if (action.utility > bestVal) {
+      bestVal = action.utility;
       bestMove = action;
       if (bestVal >= node.beta) {
-        [node.utility, node.next] = [bestVal, bestMove];
-        return bestVal;
+        [node.utility, node.nextMove] = [bestVal, bestMove];
+        return;
       }
       node.alpha = Math.max(node.alpha, bestVal);
     }
   };
 
-  [node.utility, node.next] = [bestVal, bestMove];
-  return bestVal;
+  [node.utility, node.nextMove] = [bestVal, bestMove];
 }
 
-function minValue(node: TreeNode, alpha: number, beta: number): number {
-  if (node.isTerminal()) {
-    return node.utility;
+function minValue(node: TreeNode, alpha: number, beta: number): void {
+  if (node.isTerminal) {
+    return;
   }
 
   node.alpha = alpha;
@@ -56,20 +53,19 @@ function minValue(node: TreeNode, alpha: number, beta: number): number {
 
   for (let i = 0; i < node.actions.length; ++i) {
     const action = node.actions[i];
-    const maybeBetterVal = maxValue(action, node.alpha, node.beta);
-    if (maybeBetterVal < bestVal) {
-      bestVal = maybeBetterVal;
+    maxValue(action, node.alpha, node.beta);
+    if (action.utility < bestVal) {
+      bestVal = action.utility;
       bestMove = action;
       if (bestVal <= node.alpha) {
-        [node.utility, node.next] = [bestVal, bestMove];
-        return bestVal;
+        [node.utility, node.nextMove] = [bestVal, bestMove];
+        return;
       }
       node.beta = Math.min(node.beta, bestVal);
     }
   };
 
-  [node.utility, node.next] = [bestVal, bestMove];
-  return bestVal;
+  [node.utility, node.nextMove] = [bestVal, bestMove];
 }
 
 type BasicNodeStruct = {
@@ -86,26 +82,3 @@ export function createNodes(action: BasicNodeStruct, depth = 0): TreeNode {
 
   return node;
 }
-
-// const queue = [node];
-// let recentDepth = node.depth;
-// let str = ''
-// while (queue.length > 0) {
-//   const curr = queue.shift()!;
-//   queue.push(...curr.actions);
-//   if (recentDepth !== curr.depth) {
-//     recentDepth = curr.depth;
-//     console.log(str);
-//     str = '';
-//   }
-
-//   str += `D:${curr.depth}, U:${curr.utility}          `;
-// }
-// console.log(str);
-
-// const move = alphaBetaSearch(node);
-// let thing = move;
-// while (thing) {
-//   console.log(`D:${thing.depth}, U:${thing.utility}`);
-//   thing = thing?.next!;
-// }

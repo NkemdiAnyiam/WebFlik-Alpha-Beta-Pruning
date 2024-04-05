@@ -51,5 +51,5 @@ const move = alphaBetaSearch(root);
 let thing = move;
 while (thing) {
   console.log(`D:${thing.depth}, U:${thing.utility}`);
-  thing = thing?.next!;
+  thing = thing?.nextMove!;
 }
