@@ -94,7 +94,7 @@ const root = createNodes(rawStruct);
 // }
 // console.log(str);
 
-// const move = alphaBetaSearch(root);
+alphaBetaSearch(root);
 // let thing = move;
 // while (thing) {
 //   console.log(`D:${thing.depth}, I:${thing.index}, U:${thing.utility}`);
