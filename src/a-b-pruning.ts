@@ -69,13 +69,13 @@ function minValue(node: TreeNode, alpha: number, beta: number): void {
 }
 
 type BasicNodeStruct = {
-  utility: number;
+  utility?: number;
   actions?: BasicNodeStruct[];
 };
 
 export function createNodes(action: BasicNodeStruct, depth = 0): TreeNode {
   const node = new TreeNode(
-    action.utility,
+    action.utility ?? NaN,
     action.actions?.map((action) => createNodes(action, depth + 1)) ?? [],
     depth
   );

@@ -2,10 +2,8 @@ console.log('ALPHA BETA');
 import { createNodes, alphaBetaSearch } from "./a-b-pruning";
 
 const root = createNodes({
-  utility: 3,
   actions: [
     {
-      utility: 3,
       actions: [
         {utility: 3},
         {utility: 12},
@@ -13,7 +11,6 @@ const root = createNodes({
       ]
     },
     {
-      utility: 2,
       actions: [
         {utility: 2},
         {utility: 4},
@@ -21,7 +18,6 @@ const root = createNodes({
       ]
     },
     {
-      utility: 2,
       actions : [
         {utility: 14},
         {utility: 5},
