@@ -1,5 +1,6 @@
 console.log('ALPHA BETA');
 import { createNodes, alphaBetaSearch } from "./a-b-pruning";
+import { sceneCreator } from "./sceneCreator";
 
 // const root = createNodes([
 //   [
@@ -76,6 +77,20 @@ const rawStruct = [
   ]
 ];
 
+// const rawStruct = [
+//   [
+//     [5],
+//     [
+//       [4],
+//       [2],
+//       [8]
+//     ]
+//   ],
+//   [7],
+//   [4],
+//   [4],
+// ];
+
 const root = createNodes(rawStruct);
 
 // const queue = [root];
@@ -95,6 +110,7 @@ const root = createNodes(rawStruct);
 // console.log(str);
 
 alphaBetaSearch(root);
+sceneCreator(root);
 // let thing = move;
 // while (thing) {
 //   console.log(`D:${thing.depth}, I:${thing.index}, U:${thing.utility}`);

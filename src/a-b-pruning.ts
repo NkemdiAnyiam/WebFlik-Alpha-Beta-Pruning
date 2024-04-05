@@ -1,4 +1,4 @@
-class TreeNode {
+export class TreeNode {
   alpha: number = -Infinity;
   beta: number = Infinity;
   nextMove: TreeNode | null = null;

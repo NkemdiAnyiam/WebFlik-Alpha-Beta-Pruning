@@ -10,12 +10,22 @@
 <body>
   <main class="main">
     <div class="tree-container">
-      <div class="node node--max">
+      <template id="node">
+        <div class="node">
+          <div class="node__triangle node__triangle--max">
+            <div class="node__fill"></div>
+          </div>
+          <div class="node__children">
+          </div>
+        </div>
+      </template>
+
+      <!-- <div class="node node--max">
         <div class="node__fill"></div>
       </div>
       <div class="node node--min">
         <div class="node__fill"></div>
-      </div>
+      </div> -->
     </div>
   </main>
 </body>
