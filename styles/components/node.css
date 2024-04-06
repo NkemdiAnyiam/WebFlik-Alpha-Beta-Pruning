@@ -1,4 +1,4 @@
-.node {
+.subtree {
   display: flex;
   gap: 15rem;
   flex-direction: column;
@@ -6,22 +6,22 @@
   width: 100%;
 }
 
-.node__triangle {
+.subtree__node {
   position: relative;
   width: 6rem;
   height: 6rem;
   background-color: black;
 }
 
-.node__triangle.node__triangle--max {
+.subtree__node.subtree__node--max {
   clip-path: polygon(50% 0, 100% 100%, 0% 100%);
 }
 
-.node__triangle.node__triangle--min {
+.subtree__node.subtree__node--min {
   clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
 
-.node__fill {
+.subtree__node-fill {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -32,24 +32,24 @@
   background-color: lightblue;
 }
 
-.node__triangle--max .node__fill {
+.subtree__node--max .subtree__node-fill {
   translate: -50% -47%;
 }
 
-.node__triangle--min .node__fill {
+.subtree__node--min .subtree__node-fill {
   translate: -50% -54%;
 }
 
-.node__children {
+.subtree__children {
   display: flex;
   /* grid-template-columns: repeat(3, 1fr); */
   width: 100%;
 }
 
-.node__connectors {
+.subtree__connectors {
   position: absolute;
 }
 
-.node__connector {
+.subtree__connector {
   stroke-width: 2px;
 }

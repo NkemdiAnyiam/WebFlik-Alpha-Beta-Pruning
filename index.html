@@ -10,18 +10,18 @@
 <body>
   <main class="main">
     <div class="tree-container">
-      <template id="node">
-        <div class="node">
-          <div class="node__triangle">
-            <div class="node__fill"></div>
+      <template id="subtree">
+        <div class="subtree">
+          <div class="subtree__node">
+            <div class="subtree__node-fill"></div>
           </div>
-          <div class="node__children"></div>
-          <div class="node__connectors"></div>
+          <div class="subtree__connectors"></div>
+          <div class="subtree__children"></div>
         </div>
       </template>
 
-      <template id="node__connector">
-        <wbfk-connector class="node__connector"></wbfk-connector>
+      <template id="subtree__connector">
+        <wbfk-connector class="subtree__connector"></wbfk-connector>
       </template>
     </div>
   </main>
