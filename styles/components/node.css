@@ -53,3 +53,8 @@
 .subtree__connector {
   stroke-width: 2px;
 }
+
+.strike-through {
+  stroke-width: 3px;
+  stroke: red;
+}
