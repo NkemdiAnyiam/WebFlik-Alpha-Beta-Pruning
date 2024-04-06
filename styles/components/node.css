@@ -1,7 +1,7 @@
 .subtree {
   display: flex;
-  gap: 15rem;
   flex-direction: column;
+  gap: 10rem;
   align-items: center;
   width: 100%;
 }

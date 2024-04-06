@@ -15,6 +15,7 @@ export function sceneCreator(root: TreeNode) {
   tree?.insertAdjacentElement('beforeend', nodeEl);
   removeTemplate('subtree');
   removeTemplate('subtree__connector');
+  removeTemplate('strike-through');
 }
 
 function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
