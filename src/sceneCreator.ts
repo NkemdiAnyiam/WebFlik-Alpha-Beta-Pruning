@@ -19,19 +19,21 @@ export function sceneCreator(root: TreeNode) {
 }
 
 function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
-  const nodeEl = cloneTemplate('subtree');
-  const nodeTriangleEl = nodeEl.querySelector('.subtree__node');
-  nodeTriangleEl?.classList.add(`subtree__node--${nodeType.toLowerCase()}`);
-  const childrenEl = nodeEl.querySelector('.subtree__children') as HTMLElement;
+  const subtreeEl = cloneTemplate('subtree');
+  const subtreeNodeEl = subtreeEl.querySelector('.subtree__node')!;
+  subtreeNodeEl.classList.add(`subtree__node--${nodeType.toLowerCase()}`);
+  const utilityEl = subtreeNodeEl.querySelector('.subtree__node-utility')!;
+  utilityEl.textContent = `${node.utility}`;
+  const childrenEl = subtreeEl.querySelector('.subtree__children') as HTMLElement;
 
-  const connectorsContainerEl = nodeEl.querySelector(':scope > .subtree__connectors') as HTMLElement;
+  const connectorsContainerEl = subtreeEl.querySelector(':scope > .subtree__connectors') as HTMLElement;
   for (let i = 0; i < node.actions.length; ++i) {
     const child = buildTreeR(node.actions[i], nodeType === 'MIN' ? 'MAX' : 'MIN');
     childrenEl?.insertAdjacentElement('beforeend', child);
 
     const connector = cloneTemplate('subtree__connector') as WbfkConnector;
     connectorsContainerEl.insertAdjacentElement('beforeend', connector);
-    ConnectorSetter(connector, [nodeTriangleEl, 0.5, 0.95], [child.querySelector('.subtree__node'), 0.5, 0.05]).play();
+    ConnectorSetter(connector, [subtreeNodeEl, 0.5, 0.95], [child.querySelector('.subtree__node'), 0.5, 0.05]).play();
     ConnectorEntrance(connector, '~appear', []).play();
   }
 
@@ -45,5 +47,5 @@ function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
   //   ConnectorEntrance(strikeThrough, '~appear', []).play();
   // }
 
-  return nodeEl;
+  return subtreeEl;
 }
