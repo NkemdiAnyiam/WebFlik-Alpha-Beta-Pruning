@@ -1,10 +1,11 @@
 import { TreeNode } from "./a-b-pruning";
 import { cloneTemplate, removeTemplate } from "./utils";
-import { WebFlik, WbfkConnector } from "./WebFlik";
+import { WebFlik, WbfkConnector, AnimSequence } from "./WebFlik";
 
 const {
   ConnectorSetter,
   ConnectorEntrance,
+  Transition
 } = WebFlik.createAnimationBanks();
 
 const tree = document.querySelector('.tree-container');
@@ -37,10 +38,18 @@ function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
     ConnectorEntrance(connector, '~appear', []).play();
   }
 
+  // if the current node is a leaf, add the utility value to the text content and style the node differently to indicate finalized value
   if (node.actions.length === 0) {
-    childrenEl.remove();
+    childrenEl.remove(); // remove unnecessary children div
     utilityEl.textContent = `${node.utility}`;
     utilityEl.classList.add('subtree__node-utility--final');
+
+    const nodeColor = nodeType === 'MAX' ? 'darkblue' : 'darkred';
+    new AnimSequence().addBlocks(
+      Transition(subtreeNodeEl, '~to', [{backgroundColor: nodeColor}]),
+      Transition(subtreeNodeEl.querySelector('.subtree__node-fill'), '~to', [{backgroundColor: nodeColor}], {startsWithPrevious: true}),
+      Transition(utilityEl, '~to', [{color: '#f7f7f7', fontWeight: 600}], {startsWithPrevious: true})
+    ).finish();
   }
 
   // const connectors = [...connectorsContainerEl.children] as WbfkConnector[];

@@ -47,7 +47,7 @@
 }
 
 .subtree__node-utility--final {
-  font-weight: bold;
+  /* font-weight: bold; */
 }
 
 .subtree__node--max .subtree__node-utility {
