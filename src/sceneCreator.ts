@@ -23,7 +23,7 @@ function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
   const subtreeNodeEl = subtreeEl.querySelector('.subtree__node')!;
   subtreeNodeEl.classList.add(`subtree__node--${nodeType.toLowerCase()}`);
   const utilityEl = subtreeNodeEl.querySelector('.subtree__node-utility')!;
-  utilityEl.textContent = `${node.utility}`;
+  // utilityEl.textContent = `${node.utility}`;
   const childrenEl = subtreeEl.querySelector('.subtree__children') as HTMLElement;
 
   const connectorsContainerEl = subtreeEl.querySelector(':scope > .subtree__connectors') as HTMLElement;
@@ -35,6 +35,12 @@ function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
     connectorsContainerEl.insertAdjacentElement('beforeend', connector);
     ConnectorSetter(connector, [subtreeNodeEl, 'center', 'bottom - 5%'], [child.querySelector('.subtree__node'), 'center', 'top + 5%']).play();
     ConnectorEntrance(connector, '~appear', []).play();
+  }
+
+  if (node.actions.length === 0) {
+    childrenEl.remove();
+    utilityEl.textContent = `${node.utility}`;
+    utilityEl.classList.add('subtree__node-utility--final');
   }
 
   // const connectors = [...connectorsContainerEl.children] as WbfkConnector[];
