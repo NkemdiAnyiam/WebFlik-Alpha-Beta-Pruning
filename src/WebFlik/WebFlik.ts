@@ -3,6 +3,7 @@ import { ConnectorEntranceBlock, ConnectorExitBlock, WbfkConnector, ConnectorSet
 import { presetEntrances, presetExits, presetEmphases, presetMotions, presetConnectorEntrances, presetConnectorExits, presetScrolls, presetTransitions } from "./presetBanks";
 import { useEasing } from "./utils/easing";
 import { createStyles } from "./utils/helpers";
+import { EndpointXPlacement, EndpointYPlacement } from "./utils/interfaces";
 
 type KeyframesGenerator<T extends unknown> = {
   generateKeyframes(this: T, ...animArgs: unknown[]): [forward: Keyframe[], backward?: Keyframe[]];
@@ -45,9 +46,9 @@ TBankEntry extends KeyframesGenerator<unknown> ? TBankEntry['generateKeyframes']
 
 // CHANGE NOTE: AnimNameIn now handles keyof and Extract
 // extracts only those strings in an object whose paired value is a KeyframesBankEntry
-export type AnimationNameIn<TBank extends AnimationBank> = Extract<keyof {
+export type AnimationNameIn<TBank extends AnimationBank> = Exclude<keyof {
   [key in keyof TBank as TBank[key] extends AnimationBankEntry ? key : never]: TBank[key];
-}, string>;
+}, number | symbol>;
 
 
 class _WebFlik {
@@ -125,8 +126,8 @@ class _WebFlik {
 
       ConnectorSetter: function(
         connectorElem: WbfkConnector,
-        pointA: [elemA: Element | null, leftOffset: number, topOffset: number],
-        pointB: [elemB: Element | null, leftOffset: number, topOffset: number],
+        pointA: [elemA: Element | null, xPlacement: number | EndpointXPlacement, yPlacement: number | EndpointYPlacement],
+        pointB: [elemB: Element | null, xPlacement: number | EndpointXPlacement, yPlacement: number | EndpointYPlacement],
         connectorConfig: WbfkConnectorConfig = {} as WbfkConnectorConfig
       ) {
         return new ConnectorSetterBlock(connectorElem, pointA, pointB, `~set-line-points`, {}, 'Connector Setter', connectorConfig).initialize([]);

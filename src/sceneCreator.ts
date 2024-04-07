@@ -33,7 +33,7 @@ function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
 
     const connector = cloneTemplate('subtree__connector') as WbfkConnector;
     connectorsContainerEl.insertAdjacentElement('beforeend', connector);
-    ConnectorSetter(connector, [subtreeNodeEl, 0.5, 0.95], [child.querySelector('.subtree__node'), 0.5, 0.05]).play();
+    ConnectorSetter(connector, [subtreeNodeEl, 'center', 'bottom - 5%'], [child.querySelector('.subtree__node'), 'center', 'top + 5%']).play();
     ConnectorEntrance(connector, '~appear', []).play();
   }
 
@@ -43,7 +43,7 @@ function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
   //   const last = connectors[connectors.length - 1];
   //   const strikeThrough = cloneTemplate('strike-through') as WbfkConnector;
   //   connectorsContainerEl.insertAdjacentElement('beforeend', strikeThrough);
-  //   ConnectorSetter(strikeThrough, [first.lineElement, 0.3, 0.6], [last.lineElement, 0.6, 0.4]).play();
+  //   ConnectorSetter(strikeThrough, [first.lineElement, '10% - 15px', 'center + 20%'], [last.lineElement, '80% + 15px', 'center - 20%']).play();
   //   ConnectorEntrance(strikeThrough, '~appear', []).play();
   // }
 

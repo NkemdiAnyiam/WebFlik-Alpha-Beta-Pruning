@@ -1,4 +1,4 @@
-import { CssLength, CssXAlignment, CssYAlignment, ScrollingOptions } from "./interfaces";
+import { CssLength, CssXAlignment, CssYAlignment, ScrollingOptions, parsedConnectorOffset, EndpointXPlacement, EndpointYPlacement } from "./interfaces";
 
 export const equalWithinTol = (numA: number, numB: number): boolean => Math.abs(numA - numB) < 0.001;
 export const mergeArrays = <T>(...arrays: Array<T>[]): Array<T> => Array.from(new Set(new Array<T>().concat(...arrays)));
@@ -27,6 +27,69 @@ export const splitXYTupleString = (tupleStr: `${CssLength}, ${CssLength}` | unde
 export const splitXYAlignmentString = (tupleStr: `${CssXAlignment} ${CssYAlignment}` | undefined): [x: CssXAlignment, y: CssYAlignment] | undefined => {
   return tupleStr?.split(' ') as [x: CssXAlignment, y: CssYAlignment] | undefined;
 };
+
+export function parseConnectorOffset(offset: number | EndpointYPlacement, alignment: 'vertical'): parsedConnectorOffset;
+export function parseConnectorOffset(offset: number | EndpointXPlacement, alignment: 'horizontal'): parsedConnectorOffset;
+export function parseConnectorOffset(offset: number | EndpointXPlacement | EndpointYPlacement, alignment: 'vertical' | 'horizontal'): parsedConnectorOffset {
+  if (typeof offset === 'number') { return [offset, 0]; }
+
+  let match;
+  
+  switch(alignment) {
+    case 'horizontal':
+      match =
+        offset.match(/^((?:-)?\d+(?:\.\d+)?\%|left|center|right)(?: (\+|-) ((?:-)?\d+(?:\.\d+)?px))?$/)
+        || offset.match(/^((?:-)?\d+(?:\.\d+)?px|left|center|right)(?: (\+|-) ((?:-)?\d+(?:\.\d+)?\%))?$/);
+      break;
+    case 'vertical':
+      match =
+        offset.match(/^((?:-)?\d+(?:\.\d+)?\%|top|center|bottom)(?: (\+|-) ((?:-)?\d+(?:\.\d+)?px))?$/)
+        || offset.match(/^((?:-)?\d+(?:\.\d+)?px|top|center|bottom)(?: (\+|-) ((?:-)?\d+(?:\.\d+)?\%))?$/);
+      break;
+    default:
+      throw new RangeError(`Invalid alignment value ${alignment}. Must be 'horizontal' or 'vertical'.`);
+  }
+
+  
+  if (!match) {
+    throw new RangeError(`Invalid connector offset string ${offset} using alignment ${alignment}.`);
+  }
+
+  const [val1, operator = '+', val2] = match.slice(1, 4);
+  const sign = operator === '+' ? 1 : -1;
+
+  if (val1.includes('%')) {
+    return [Number.parseFloat(val1) / 100, Number.parseFloat(val2 ?? '0px') * sign];
+  }
+  else if (val1.includes('px')) {
+    return [Number.parseFloat(val2 ?? '0%') / 100, Number.parseFloat(val1) * sign];
+  }
+  else {
+    let alignmentPerc;
+    switch(val1 as CssXAlignment | CssYAlignment) {
+      case "left":
+      case "top":
+        alignmentPerc = 0;
+        break;
+      case "right":
+      case "bottom":
+        alignmentPerc = 1;
+        break;
+      case "center":
+        alignmentPerc = 0.5;
+        break;
+      default:
+        throw new RangeError(`Something wrong occured for ${val1} to be ${val1}`);
+    }
+
+    if (val2?.includes('%')) {
+      return [alignmentPerc + Number.parseFloat(val2 ?? '0%') / 100 * sign, 0];
+    }
+    else {
+      return [alignmentPerc, Number.parseFloat(val2 ?? '0px') * sign];
+    }
+  }
+}
 
 export const computeSelfScrollingBounds = (scrollable: Element, target: Element, scrollOptions: ScrollingOptions): {fromXY: [number, number], toXY: [number, number]} => {
   // determines the intersection point of the target
