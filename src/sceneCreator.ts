@@ -15,7 +15,8 @@ export function sceneCreator(root: TreeNode) {
 
   tree?.insertAdjacentElement('beforeend', nodeEl);
   removeTemplate('subtree');
-  removeTemplate('subtree__connector');
+  removeTemplate('subtree__connector-base');
+  removeTemplate('subtree__connector-thick');
   removeTemplate('strike-through');
 }
 
@@ -36,11 +37,14 @@ function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
     const child = buildTreeR(node.actions[i], nodeType === 'MIN' ? 'MAX' : 'MIN');
     childrenEl?.insertAdjacentElement('beforeend', child);
 
-    const connector = cloneTemplate('subtree__connector') as WbfkConnector;
-    connectorsContainerEl.insertAdjacentElement('beforeend', connector);
-    connector.dataset.toId = `${node.actions[i].id}`;
-    ConnectorSetter(connector, [subtreeNodeEl, 'center', 'bottom - 5%'], [child.querySelector('.subtree__node'), 'center', 'top + 5%']).play();
-    ConnectorEntrance(connector, '~appear', []).play();
+    const connectorBase = cloneTemplate('subtree__connector-base') as WbfkConnector;
+    const connectorThick = cloneTemplate('subtree__connector-thick') as WbfkConnector;
+    connectorsContainerEl.insertAdjacentElement('beforeend', connectorBase);
+    connectorsContainerEl.insertAdjacentElement('beforeend', connectorThick);
+    connectorThick.dataset.toId = connectorBase.dataset.toId = `${node.actions[i].id}`;
+    ConnectorSetter(connectorBase, [subtreeNodeEl, 'center', 'bottom - 5%'], [child.querySelector('.subtree__node'), 'center', 'top + 5%']).play();
+    ConnectorSetter(connectorThick, [subtreeNodeEl, 'center', 'bottom - 5%'], [child.querySelector('.subtree__node'), 'center', 'top + 5%']).play();
+    ConnectorEntrance(connectorBase, '~appear', []).play();
   }
 
   // if the current node is a leaf, add the utility value to the text content and style the node differently to indicate finalized value

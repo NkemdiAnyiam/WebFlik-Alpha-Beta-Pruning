@@ -96,9 +96,9 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
     const action = node.actions[i];
 
     const actionSubtreeEl = document.querySelector(`[data-id="${action.id}"]`);
-    const connectorToAction = document.querySelector(`.subtree__connector[data-to-id="${action.id}"]`) as WbfkConnector;
+    const connectorToAction = document.querySelector(`.subtree__connector--thick[data-to-id="${action.id}"]`) as WbfkConnector;
     timeline.addSequences(new AnimSequence().addBlocks(
-      Transition(connectorToAction, '~to', [{strokeDasharray: 0, strokeWidth: '4px'}]),
+      ConnectorEntrance(connectorToAction, '~trace', ['from-A']),
     ));
 
 
