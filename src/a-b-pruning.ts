@@ -54,6 +54,25 @@ function maxValue(node: TreeNode, alpha: number, beta: number): void {
   let bestVal = -Infinity;
   let bestMove = null;
 
+  const subtreeEl = document.querySelector(`[data-id="${node.id}"]`)!
+  const varsEl = subtreeEl.querySelector('.subtree__node-vars')!;
+  const alphaEl = subtreeEl.querySelector(`.subtree__node-var--alpha`)!;
+  const alphaValEl = alphaEl.querySelector(`.subtree__node-var-value`)!;
+  const betaEl = varsEl.querySelector(`.subtree__node-var--beta`)!;
+  const betaValEl = betaEl.querySelector(`.subtree__node-var-value`)!;
+  const seq = new AnimSequence()
+    .setOnStart({
+      do() { alphaValEl.innerHTML = `${alpha}`.replace('Infinity', '&infin;'); betaValEl.innerHTML = `${beta}`.replace('Infinity', '&infin;'); },
+      undo() { betaValEl.innerHTML = alphaValEl.innerHTML = ``; },
+    })
+    .addBlocks(
+      Entrance(varsEl, '~fade-in', []),
+      Entrance(alphaValEl, '~wipe', ['from-left'], {duration: 250}),
+      Entrance(betaValEl, '~wipe', ['from-left'], {duration: 250})
+    );
+
+  timeline.addSequences(seq);
+
   for (let i = 0; i < node.actions.length; ++i) {
     const action = node.actions[i];
     minValue(action, node.alpha, node.beta);
