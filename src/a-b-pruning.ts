@@ -11,6 +11,8 @@ const {
   ConnectorExit,
 } = WebFlik.createAnimationBanks();
 
+const timeline = new AnimTimeline({timelineName: 'Alpha-Beta-Pruning', debugMode: true});
+
 export class TreeNode {
   alpha: number = -Infinity;
   beta: number = Infinity;
