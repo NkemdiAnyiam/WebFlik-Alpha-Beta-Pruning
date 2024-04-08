@@ -27,6 +27,7 @@ function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
   const subtreeNodeEl = subtreeEl.querySelector('.subtree__node')!;
   subtreeNodeEl.classList.add(`subtree__node--${nodeType.toLowerCase()}`);
   const utilityEl = subtreeNodeEl.querySelector('.subtree__node-utility')!;
+  utilityEl.innerHTML = nodeType === 'MAX' ? `-&infin;` : `&infin;`;
   // utilityEl.textContent = `${node.utility}`;
   const childrenEl = subtreeEl.querySelector('.subtree__children') as HTMLElement;
 
@@ -50,6 +51,7 @@ function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
 
     utilityEl.textContent = `${node.utility}`;
     utilityEl.classList.add('subtree__node-utility--final');
+    utilityEl.classList.remove('wbfk-hidden');
 
     const nodeColor = nodeType === 'MAX' ? 'darkblue' : 'darkred';
     new AnimSequence().addBlocks(

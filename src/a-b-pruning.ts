@@ -61,6 +61,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
   const alphaValEl = alphaEl.querySelector(`.subtree__node-var-value`)!;
   const betaEl = varsEl.querySelector(`.subtree__node-var--beta`)!;
   const betaValEl = betaEl.querySelector(`.subtree__node-var-value`)!;
+  const subtreeNodeUtilityEl = subtreeEl.querySelector(`.subtree__node-utility`)!;
 
   const parentSubtree = document.querySelector(`[data-id="${node.parent?.id}"]`);
   const sequenceRevealVars = new AnimSequence()
@@ -69,6 +70,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
       undo() { betaValEl.innerHTML = alphaValEl.innerHTML = ``; },
     })
     .addBlocks(
+      Entrance(subtreeNodeUtilityEl, '~wipe', ['from-left']),
       Entrance(varsEl, '~fade-in', []),
       Entrance(alphaValEl, '~wipe', ['from-left'], {duration: 250}),
       Entrance(betaValEl, '~wipe', ['from-left'], {duration: 250})
@@ -80,13 +82,13 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
     const parentVarsConnector = parentSubtree.querySelector(`.subtree__vars-connector`) as WbfkConnector;
     const parentVarsEl = parentSubtree.querySelector(`.subtree__node-vars`);
     sequenceRevealVars.addBlocksAt(
-      0,
+      1,
       ConnectorSetter(parentVarsConnector, [parentVarsEl, 'left', 'center'], [varsEl, 'center', 'top']),
       ConnectorEntrance(parentVarsConnector, '~trace', ['from-A'])
     );
 
     timeline.addSequences(new AnimSequence({autoplaysNextSequence: true}).addBlocks(
-      ConnectorExit(parentVarsConnector, '~trace', ['from-A'])
+      ConnectorExit(parentVarsConnector, '~fade-out', [])
     ));
   }
   
@@ -105,6 +107,23 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
     if (betterUtility(op, action, bestVal)) {
       bestVal = action.utility;
       bestMove = action;
+
+      const bestValCopy = bestVal;
+      const oldInnerText = subtreeNodeUtilityEl.innerHTML;
+      timeline.addSequences(
+        new AnimSequence({autoplaysNextSequence: true})
+          .addBlocks(
+            Exit(subtreeNodeUtilityEl, '~wipe', ['from-right'])
+          ),
+        new AnimSequence()
+          .setOnStart({
+            do() { subtreeNodeUtilityEl.innerHTML = `${bestValCopy}`; },
+            undo() { subtreeNodeUtilityEl.innerHTML = oldInnerText; }
+          })
+          .addBlocks(
+            Entrance(subtreeNodeUtilityEl, '~wipe', ['from-left'])
+          )
+      );
 
       // if equals or beats variable (beta if MAX, alpha if MIN), cut
       if (meetsCutCondition(op, node, bestVal) && i+1 < node.actions.length) {
