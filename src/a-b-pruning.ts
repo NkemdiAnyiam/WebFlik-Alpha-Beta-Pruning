@@ -101,8 +101,11 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
       ConnectorEntrance(connectorToAction, '~trace', ['from-A']),
     ));
 
-
     minOrMaxValue(op === 'MAX' ? 'MIN' : 'MAX', action, node.alpha, node.beta);
+
+    timeline.addSequences(new AnimSequence().addBlocks(
+      ConnectorExit(connectorToAction, '~trace', ['from-B'])
+    ));
     // check to see if action.utility is better
     if (betterUtility(op, action, bestVal)) {
       bestVal = action.utility;
@@ -111,11 +114,11 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
       const bestValCopy = bestVal;
       const oldInnerText = subtreeNodeUtilityEl.innerHTML;
       timeline.addSequences(
-        new AnimSequence({autoplaysNextSequence: true})
+        new AnimSequence({autoplays: true})
           .addBlocks(
             Exit(subtreeNodeUtilityEl, '~wipe', ['from-right'])
           ),
-        new AnimSequence()
+        new AnimSequence({autoplays: true})
           .setOnStart({
             do() { subtreeNodeUtilityEl.innerHTML = `${bestValCopy}`; },
             undo() { subtreeNodeUtilityEl.innerHTML = oldInnerText; }
