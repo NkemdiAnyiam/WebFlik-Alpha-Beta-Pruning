@@ -32,7 +32,9 @@
           </div>
 
           <!-- connectors to children -->
-          <div class="subtree__connectors"></div>
+          <div class="subtree__connectors">
+            <wbfk-connector class="subtree__vars-connector wbfk-hidden" b-marker></wbfk-connector>
+          </div>
 
           <!-- children -->
           <div class="subtree__children"></div>
@@ -42,6 +44,10 @@
       <template id="subtree__connector">
         <wbfk-connector class="subtree__connector"></wbfk-connector>
       </template>
+
+      <!-- <template id="subtree__vars-connector">
+        <wbfk-connector class="subtree__vars-connector" b-marker></wbfk-connector>
+      </template> -->
 
       <template id="strike-through">
         <wbfk-connector class="strike-through"></wbfk-connector>

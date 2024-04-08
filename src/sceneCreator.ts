@@ -43,7 +43,10 @@ function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
 
   // if the current node is a leaf, add the utility value to the text content and style the node differently to indicate finalized value
   if (node.actions.length === 0) {
-    childrenEl.remove(); // remove unnecessary children div
+    // remove unnecessary elements
+    childrenEl.remove();
+    connectorsContainerEl.querySelector('.subtree__vars-connector')?.remove();
+
     utilityEl.textContent = `${node.utility}`;
     utilityEl.classList.add('subtree__node-utility--final');
 

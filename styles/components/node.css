@@ -107,6 +107,11 @@
   stroke-width: 2px;
 }
 
+.subtree__vars-connector {
+  stroke-width: 2px;
+  stroke-dasharray: 2;
+}
+
 .strike-through {
   stroke-width: 3px;
   stroke: red;

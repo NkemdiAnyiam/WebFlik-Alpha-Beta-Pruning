@@ -116,6 +116,16 @@ export class AnimSequence implements AnimSequenceConfig {
     this.animBlocks.push(...animBlocks);
     return this;
   }
+  
+  addBlocksAt(index: number, ...animBlocks: AnimBlock[]): AnimSequence {
+    for (const animBlock of animBlocks) {
+      animBlock.setID(this.id, this.timelineID);
+      animBlock.parentTimeline = this.parentTimeline;
+      animBlock.parentSequence = this;
+    }
+    this.animBlocks.splice(index, 0, ...animBlocks);
+    return this;
+  }
 
   findBlockIndex(animBlock: AnimBlock): number {
     return this.animBlocks.findIndex((_animBlock) => _animBlock === animBlock);

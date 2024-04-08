@@ -19,21 +19,22 @@ export class TreeNode {
   alpha: number = -Infinity;
   beta: number = Infinity;
   nextMove: TreeNode | null = null;
+  parent: TreeNode | null = null;
   get isTerminal(): boolean { return this.actions.length === 0; }
 
-  constructor(public utility: number, public actions: TreeNode[], public depth: number, public index: number, public parent: TreeNode | null) {
+  constructor(public utility: number, public actions: TreeNode[], public depth: number, public index: number) {
     this.id = TreeNode.id++;
   }
 }
 
-export function createNodes(dataStruct: any[], parent: TreeNode | null = null, depth = 0, index = 0): TreeNode {
+export function createNodes(dataStruct: any[], depth = 0, index = 0): TreeNode {
   const node = new TreeNode(
     typeof dataStruct[0] === 'number' ? dataStruct[0] : NaN,
-    dataStruct[0] instanceof Array ? dataStruct.map((action, i) => createNodes(action, parent, depth + 1, i)) : [],
+    dataStruct[0] instanceof Array ? dataStruct.map((action, i) => createNodes(action, depth + 1, i)) : [],
     depth,
     index,
-    parent
   );
+  for (const child of node.actions) { child.parent = node; }
 
   return node;
 }
@@ -60,6 +61,8 @@ function maxValue(node: TreeNode, alpha: number, beta: number): void {
   const alphaValEl = alphaEl.querySelector(`.subtree__node-var-value`)!;
   const betaEl = varsEl.querySelector(`.subtree__node-var--beta`)!;
   const betaValEl = betaEl.querySelector(`.subtree__node-var-value`)!;
+
+  const parentSubtree = document.querySelector(`[data-id="${node.parent?.id}"]`);
   const seq = new AnimSequence()
     .setOnStart({
       do() { alphaValEl.innerHTML = `${alpha}`.replace('Infinity', '&infin;'); betaValEl.innerHTML = `${beta}`.replace('Infinity', '&infin;'); },
@@ -70,6 +73,16 @@ function maxValue(node: TreeNode, alpha: number, beta: number): void {
       Entrance(alphaValEl, '~wipe', ['from-left'], {duration: 250}),
       Entrance(betaValEl, '~wipe', ['from-left'], {duration: 250})
     );
+
+  if (parentSubtree) {
+    const parentVarsConnector = parentSubtree.querySelector(`.subtree__vars-connector`) as WbfkConnector;
+    const parentVarsEl = parentSubtree.querySelector(`.subtree__node-vars`);
+    seq.addBlocksAt(
+      1,
+      ConnectorSetter(parentVarsConnector, [parentVarsEl, 'left', 'center'], [varsEl, 'center', 'top']),
+      ConnectorEntrance(parentVarsConnector, '~trace', ['from-A'])
+    )
+  }
 
   timeline.addSequences(seq);
 
@@ -101,6 +114,37 @@ function minValue(node: TreeNode, alpha: number, beta: number): void {
   
   let bestVal = Infinity;
   let bestMove = null;
+
+  const subtreeEl = document.querySelector(`[data-id="${node.id}"]`)!
+  const varsEl = subtreeEl.querySelector('.subtree__node-vars')!;
+  const alphaEl = subtreeEl.querySelector(`.subtree__node-var--alpha`)!;
+  const alphaValEl = alphaEl.querySelector(`.subtree__node-var-value`)!;
+  const betaEl = varsEl.querySelector(`.subtree__node-var--beta`)!;
+  const betaValEl = betaEl.querySelector(`.subtree__node-var-value`)!;
+
+  const parentSubtree = document.querySelector(`[data-id="${node.parent?.id}"]`);
+  const seq = new AnimSequence()
+    .setOnStart({
+      do() { alphaValEl.innerHTML = `${alpha}`.replace('Infinity', '&infin;'); betaValEl.innerHTML = `${beta}`.replace('Infinity', '&infin;'); },
+      undo() { betaValEl.innerHTML = alphaValEl.innerHTML = ``; },
+    })
+    .addBlocks(
+      Entrance(varsEl, '~fade-in', []),
+      Entrance(alphaValEl, '~wipe', ['from-left'], {duration: 250}),
+      Entrance(betaValEl, '~wipe', ['from-left'], {duration: 250})
+    );
+
+  if (parentSubtree) {
+    const parentVarsConnector = parentSubtree.querySelector(`.subtree__vars-connector`) as WbfkConnector;
+    const parentVarsEl = parentSubtree.querySelector(`.subtree__node-vars`);
+    seq.addBlocksAt(
+      1,
+      ConnectorSetter(parentVarsConnector, [parentVarsEl, 'left', 'center'], [varsEl, 'center', 'top']),
+      ConnectorEntrance(parentVarsConnector, '~trace', ['from-A'])
+    )
+  }
+
+  timeline.addSequences(seq);
 
   for (let i = 0; i < node.actions.length; ++i) {
     const action = node.actions[i];
