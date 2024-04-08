@@ -104,7 +104,8 @@
 }
 
 .subtree__connector {
-  stroke-width: 2px;
+  stroke-width: 3px;
+  stroke-dasharray: 2;
 }
 
 .subtree__vars-connector {

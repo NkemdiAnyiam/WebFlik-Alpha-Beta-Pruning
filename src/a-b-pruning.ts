@@ -63,7 +63,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
   const betaValEl = betaEl.querySelector(`.subtree__node-var-value`)!;
 
   const parentSubtree = document.querySelector(`[data-id="${node.parent?.id}"]`);
-  const seq = new AnimSequence()
+  const sequenceRevealVars = new AnimSequence()
     .setOnStart({
       do() { alphaValEl.innerHTML = `${alpha}`.replace('Infinity', '&infin;'); betaValEl.innerHTML = `${beta}`.replace('Infinity', '&infin;'); },
       undo() { betaValEl.innerHTML = alphaValEl.innerHTML = ``; },
@@ -74,20 +74,32 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
       Entrance(betaValEl, '~wipe', ['from-left'], {duration: 250})
     );
 
+  timeline.addSequences(sequenceRevealVars);
+
   if (parentSubtree) {
     const parentVarsConnector = parentSubtree.querySelector(`.subtree__vars-connector`) as WbfkConnector;
     const parentVarsEl = parentSubtree.querySelector(`.subtree__node-vars`);
-    seq.addBlocksAt(
-      1,
+    sequenceRevealVars.addBlocksAt(
+      0,
       ConnectorSetter(parentVarsConnector, [parentVarsEl, 'left', 'center'], [varsEl, 'center', 'top']),
       ConnectorEntrance(parentVarsConnector, '~trace', ['from-A'])
-    )
-  }
+    );
 
-  timeline.addSequences(seq);
+    timeline.addSequences(new AnimSequence({autoplaysNextSequence: true}).addBlocks(
+      ConnectorExit(parentVarsConnector, '~trace', ['from-A'])
+    ));
+  }
   
   for (let i = 0; i < node.actions.length; ++i) {
     const action = node.actions[i];
+
+    const actionSubtreeEl = document.querySelector(`[data-id="${action.id}"]`);
+    const connectorToAction = document.querySelector(`.subtree__connector[data-to-id="${action.id}"]`) as WbfkConnector;
+    timeline.addSequences(new AnimSequence().addBlocks(
+      Transition(connectorToAction, '~to', [{strokeDasharray: 0, strokeWidth: '4px'}]),
+    ));
+
+
     minOrMaxValue(op === 'MAX' ? 'MIN' : 'MAX', action, node.alpha, node.beta);
     // check to see if action.utility is better
     if (betterUtility(op, action, bestVal)) {
@@ -108,6 +120,15 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
   [node.utility, node.nextMove] = [bestVal, bestMove];
 }
 
+
+
+
+
+
+
+
+
+// HELPER FUNCTIONS
 function betterUtility(op: 'MAX' | 'MIN', action: TreeNode, currentBest: number): boolean {
   switch(op) {
     case "MAX": return action.utility > currentBest;

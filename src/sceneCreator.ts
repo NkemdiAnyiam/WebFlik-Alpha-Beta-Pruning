@@ -37,6 +37,7 @@ function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
 
     const connector = cloneTemplate('subtree__connector') as WbfkConnector;
     connectorsContainerEl.insertAdjacentElement('beforeend', connector);
+    connector.dataset.toId = `${node.actions[i].id}`;
     ConnectorSetter(connector, [subtreeNodeEl, 'center', 'bottom - 5%'], [child.querySelector('.subtree__node'), 'center', 'top + 5%']).play();
     ConnectorEntrance(connector, '~appear', []).play();
   }
