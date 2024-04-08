@@ -96,15 +96,17 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
     const action = node.actions[i];
 
     const actionSubtreeEl = document.querySelector(`[data-id="${action.id}"]`);
-    const connectorToAction = document.querySelector(`.subtree__connector--thick[data-to-id="${action.id}"]`) as WbfkConnector;
+    const baseChildConnector = document.querySelector(`.subtree__connector--base[data-to-id="${action.id}"]`) as WbfkConnector;
+    const thickChildConnector = document.querySelector(`.subtree__connector--thick[data-to-id="${action.id}"]`) as WbfkConnector;
     timeline.addSequences(new AnimSequence().addBlocks(
-      ConnectorEntrance(connectorToAction, '~trace', ['from-A']),
+      ConnectorEntrance(thickChildConnector, '~trace', ['from-A']),
     ));
 
     minOrMaxValue(op === 'MAX' ? 'MIN' : 'MAX', action, node.alpha, node.beta);
 
     timeline.addSequences(new AnimSequence().addBlocks(
-      ConnectorExit(connectorToAction, '~trace', ['from-B'])
+      ConnectorExit(thickChildConnector, '~trace', ['from-B']),
+      Transition(baseChildConnector, '~to', [{strokeDasharray: 0}], {startsWithPrevious: true})
     ));
     // check to see if action.utility is better
     if (betterUtility(op, action, bestVal)) {
