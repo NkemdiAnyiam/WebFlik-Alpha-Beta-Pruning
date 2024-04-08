@@ -14,12 +14,28 @@ const {
 const timeline = new AnimTimeline({timelineName: 'Alpha-Beta-Pruning', debugMode: true});
 
 export class TreeNode {
+  readonly id: number;
+  static id: number = 0;
   alpha: number = -Infinity;
   beta: number = Infinity;
   nextMove: TreeNode | null = null;
   get isTerminal(): boolean { return this.actions.length === 0; }
 
-  constructor(public utility: number, public actions: TreeNode[], public depth: number, public index: number) {}
+  constructor(public utility: number, public actions: TreeNode[], public depth: number, public index: number, public parent: TreeNode | null) {
+    this.id = TreeNode.id++;
+  }
+}
+
+export function createNodes(dataStruct: any[], parent: TreeNode | null = null, depth = 0, index = 0): TreeNode {
+  const node = new TreeNode(
+    typeof dataStruct[0] === 'number' ? dataStruct[0] : NaN,
+    dataStruct[0] instanceof Array ? dataStruct.map((action, i) => createNodes(action, parent, depth + 1, i)) : [],
+    depth,
+    index,
+    parent
+  );
+
+  return node;
 }
 
 export function alphaBetaSearch(root: TreeNode) {
@@ -83,17 +99,6 @@ function minValue(node: TreeNode, alpha: number, beta: number): void {
   };
 
   [node.utility, node.nextMove] = [bestVal, bestMove];
-}
-
-export function createNodes(dataStruct: any[], depth = 0, index = 0): TreeNode {
-  const node = new TreeNode(
-    typeof dataStruct[0] === 'number' ? dataStruct[0] : NaN,
-    dataStruct[0] instanceof Array ? dataStruct.map((action, i) => createNodes(action, depth + 1, i)) : [],
-    depth,
-    index
-  );
-
-  return node;
 }
 
 
