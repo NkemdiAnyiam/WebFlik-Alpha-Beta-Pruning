@@ -89,21 +89,48 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
   for (let i = 0; i < node.actions.length; ++i) {
     const action = node.actions[i];
     minOrMaxValue(op === 'MAX' ? 'MIN' : 'MAX', action, node.alpha, node.beta);
-    if ( (op === 'MAX' && action.utility > bestVal) || (op === 'MIN' && action.utility < bestVal) ) {
+    // check to see if action.utility is better
+    if (betterUtility(op, action, bestVal)) {
       bestVal = action.utility;
       bestMove = action;
-      // if equals or beats variable, cut
-      if ( ((op === 'MAX' && bestVal >= node.beta) || (op === 'MIN' && bestVal <= node.alpha)) && i+1 < node.actions.length ) {
+
+      // if equals or beats variable (beta if MAX, alpha if MIN), cut
+      if (meetsCutCondition(op, node, bestVal) && i+1 < node.actions.length) {
         [node.utility, node.nextMove] = [bestVal, bestMove];
         return;
       }
 
-      if (op === 'MAX') { (node.alpha = Math.max(node.alpha, bestVal)); }
-      else { (node.beta = Math.min(node.beta, bestVal)) };
+      // update node variable (alpha if MAX, beta if MIN)
+      updateVar(op, node, bestVal);
     }
   };
 
   [node.utility, node.nextMove] = [bestVal, bestMove];
+}
+
+function betterUtility(op: 'MAX' | 'MIN', action: TreeNode, currentBest: number): boolean {
+  switch(op) {
+    case "MAX": return action.utility > currentBest;
+    case "MIN": return action.utility < currentBest;
+  }
+}
+
+function meetsCutCondition(op: 'MAX' | 'MIN', node: TreeNode, bestUtility: number): boolean {
+  switch(op) {
+    case "MAX": return bestUtility >= node.beta;
+    case "MIN": return bestUtility <= node.alpha;
+  }
+}
+
+function updateVar(op: 'MAX' | 'MIN', node: TreeNode, potentialNewVal: number): void {
+  switch(op) {
+    case "MAX":
+      node.alpha = Math.max(node.alpha, potentialNewVal);
+      break;
+    case "MIN":
+      node.beta = Math.min(node.beta, potentialNewVal);
+      break;
+  }
 }
 
 
