@@ -12,12 +12,29 @@
     <div class="tree-container">
       <template id="subtree">
         <div class="subtree">
-          <div class="subtree__node">
-            <div class="subtree__node-fill">
-              <span class="subtree__node-utility"></span>
+          <div class="subtree__root-container">
+            <!-- alpha and beta -->
+            <div class="subtree__node-vars">
+              <div class="subtree__node-var subtree__node-var--alpha">
+                &alpha;= <span class="subtree__node-var-value">&infin;</span>
+              </div>
+              <div class="subtree__node-var subtree__node-var--beta">
+                &beta;= <span class="subtree__node-var-value">&infin;</span>
+              </div>
+            </div>
+
+            <!-- node -->
+            <div class="subtree__node">
+              <div class="subtree__node-fill">
+                <span class="subtree__node-utility"></span>
+              </div>
             </div>
           </div>
+
+          <!-- connectors to children -->
           <div class="subtree__connectors"></div>
+
+          <!-- children -->
           <div class="subtree__children"></div>
         </div>
       </template>

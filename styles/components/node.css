@@ -6,6 +6,33 @@
   width: 100%;
 }
 
+.subtree__root-container {
+  position: relative;
+}
+
+.subtree__node-vars {
+  position: absolute;
+  left: 50%;
+  translate: -50% -100%;
+  border: 2px solid black;
+  background-color: #f7f7f7dd;
+  width: 5.8rem;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.subtree__node-var {
+}
+
+.subtree__node-var--alpha {
+  color: darkblue;
+}
+
+.subtree__node-var--beta {
+  color: darkred;
+}
+
 .subtree__node {
   position: relative;
   width: 6rem;
