@@ -17,7 +17,7 @@ export function sceneCreator(root: TreeNode) {
   removeTemplate('subtree');
   removeTemplate('subtree__connector-base');
   removeTemplate('subtree__connector-thick');
-  removeTemplate('strike-through');
+  // removeTemplate('strike-through');
 }
 
 function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {

@@ -133,13 +133,59 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
       // if equals or beats variable (beta if MAX, alpha if MIN), cut
       if (meetsCutCondition(op, node, bestVal) && i+1 < node.actions.length) {
         [node.utility, node.nextMove] = [bestVal, bestMove];
+
+        const strikeThroughConnector = subtreeEl.querySelector(`:scope > .subtree__connectors .strike-through`) as WbfkConnector;
+        const firstLine = document.querySelector(`.subtree__connector--base[data-to-id="${node.actions[i+1].id}"]`) as WbfkConnector;
+        const lastLine = document.querySelector(`.subtree__connector--base[data-to-id="${node.actions[node.actions.length - 1].id}"]`) as WbfkConnector;
+
+        timeline.addSequences(new AnimSequence().addBlocks(
+          ConnectorSetter(strikeThroughConnector, [firstLine.lineElement, 'center - 10%', 'center + 10%'], [lastLine.lineElement, 'center + 10%', 'center - 10%']),
+          ConnectorEntrance(strikeThroughConnector, '~trace', ['from-left']),
+          ...node.actions.slice(i+1).map( action => Transition(document.querySelector(`[data-id="${action.id}"]`), '~to', [{opacity: 0.5}], {startsNextBlock: true}) )
+        ));
+
+        const subtreeNodeEl = subtreeEl.querySelector(`.subtree__node`)!;
+        const nodeColor = op === 'MAX' ? 'darkblue' : 'darkred';
+
+        timeline.addSequences(new AnimSequence().addBlocks(
+          Transition(subtreeNodeEl, '~to', [{backgroundColor: nodeColor}]),
+          Transition(subtreeNodeEl.querySelector('.subtree__node-fill'), '~to', [{backgroundColor: nodeColor}], {startsWithPrevious: true}),
+          Transition(subtreeNodeUtilityEl, '~to', [{color: '#f7f7f7', fontWeight: 600}], {startsWithPrevious: true})
+        ));
+        
         return;
       }
 
       // update node variable (alpha if MAX, beta if MIN)
-      updateVar(op, node, bestVal);
+        const prevVarVal = op === 'MAX' ? node.alpha : node.beta;
+      if (updateVar(op, node, bestVal)) {
+        const [varValEl, varValCopy] = op === 'MAX' ? [alphaValEl, node.alpha] : [betaValEl, node.beta];
+        timeline.addSequences(
+          new AnimSequence()
+            .addBlocks(
+              Exit(varValEl, '~wipe', ['from-right'])
+            ),
+          new AnimSequence({autoplays: true})
+            .setOnStart({
+              do() { varValEl.innerHTML = `${varValCopy}`; },
+              undo() { varValEl.innerHTML = `${prevVarVal}`.replace('Infinity', '&infin;'); }
+            })
+            .addBlocks(
+              Entrance(varValEl, '~wipe', ['from-left'])
+            )
+        );
+      }
     }
   };
+
+  const subtreeNodeEl = subtreeEl.querySelector(`.subtree__node`)!;
+  const nodeColor = op === 'MAX' ? 'darkblue' : 'darkred';
+
+  timeline.addSequences(new AnimSequence().addBlocks(
+    Transition(subtreeNodeEl, '~to', [{backgroundColor: nodeColor}]),
+    Transition(subtreeNodeEl.querySelector('.subtree__node-fill'), '~to', [{backgroundColor: nodeColor}], {startsWithPrevious: true}),
+    Transition(subtreeNodeUtilityEl, '~to', [{color: '#f7f7f7', fontWeight: 600}], {startsWithPrevious: true})
+  ));
 
   [node.utility, node.nextMove] = [bestVal, bestMove];
 }
@@ -167,15 +213,21 @@ function meetsCutCondition(op: 'MAX' | 'MIN', node: TreeNode, bestUtility: numbe
   }
 }
 
-function updateVar(op: 'MAX' | 'MIN', node: TreeNode, potentialNewVal: number): void {
+function updateVar(op: 'MAX' | 'MIN', node: TreeNode, potentialNewVal: number): boolean {
   switch(op) {
     case "MAX":
-      node.alpha = Math.max(node.alpha, potentialNewVal);
-      break;
+      if (node.alpha < potentialNewVal) {
+        node.alpha = potentialNewVal;
+        return true;
+      }
     case "MIN":
-      node.beta = Math.min(node.beta, potentialNewVal);
-      break;
+      if (node.beta > potentialNewVal) {
+        node.beta = potentialNewVal;
+        return true;
+      }
   }
+
+  return false;
 }
 
 
