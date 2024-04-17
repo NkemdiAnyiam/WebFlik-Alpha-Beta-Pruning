@@ -110,6 +110,7 @@
 
 .subtree__connector--thick {
   stroke-width: 6px;
+  z-index: -1;
 }
 
 .subtree__vars-connector {
