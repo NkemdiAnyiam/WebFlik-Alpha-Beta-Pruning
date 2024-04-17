@@ -135,12 +135,15 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
         [node.utility, node.nextMove] = [bestVal, bestMove];
 
         const strikeThroughConnector = subtreeEl.querySelector(`:scope > .subtree__connectors .strike-through`) as WbfkConnector;
-        const firstLine = document.querySelector(`.subtree__connector--base[data-to-id="${node.actions[i+1].id}"]`) as WbfkConnector;
-        const lastLine = document.querySelector(`.subtree__connector--base[data-to-id="${node.actions[node.actions.length - 1].id}"]`) as WbfkConnector;
+        const firstPrunedLine = document.querySelector(`.subtree__connector--base[data-to-id="${node.actions[i+1].id}"]`) as WbfkConnector;
+        const lastPrunedLine = document.querySelector(`.subtree__connector--base[data-to-id="${node.actions[node.actions.length - 1].id}"]`) as WbfkConnector;
 
         timeline.addSequences(new AnimSequence().addBlocks(
-          ConnectorSetter(strikeThroughConnector, [firstLine.lineElement, 'center - 10%', 'center + 10%'], [lastLine.lineElement, 'center + 10%', 'center - 10%']),
+          // draw strike through the connectors of the subtrees that just got pruned
+          ConnectorSetter(strikeThroughConnector, [firstPrunedLine.lineElement, 'center - 10%', 'center + 10%'], [lastPrunedLine.lineElement, 'center + 10%', 'center - 10%']),
           ConnectorEntrance(strikeThroughConnector, '~trace', ['from-left']),
+          // reduce opacity of the child subtrees that just got pruned and the connectors pointing to them
+          ...node.actions.slice(i+1).map( action => Transition(document.querySelector(`[data-to-id="${action.id}"]`), '~to', [{opacity: 0.5}], {startsNextBlock: true}) ),
           ...node.actions.slice(i+1).map( action => Transition(document.querySelector(`[data-id="${action.id}"]`), '~to', [{opacity: 0.5}], {startsNextBlock: true}) )
         ));
 
@@ -157,7 +160,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
       }
 
       // update node variable (alpha if MAX, beta if MIN)
-        const prevVarVal = op === 'MAX' ? node.alpha : node.beta;
+      const prevVarVal = op === 'MAX' ? node.alpha : node.beta;
       if (updateVar(op, node, bestVal)) {
         const [varValEl, varValCopy] = op === 'MAX' ? [alphaValEl, node.alpha] : [betaValEl, node.beta];
         timeline.addSequences(
