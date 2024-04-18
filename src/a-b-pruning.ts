@@ -70,13 +70,16 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
       undo() { betaValEl.innerHTML = alphaValEl.innerHTML = ``; },
     })
     .addBlocks(
-      Entrance(subtreeNodeUtilityEl, '~wipe', ['from-left']),
       Entrance(varsEl, '~fade-in', []),
       Entrance(alphaValEl, '~wipe', ['from-left'], {duration: 250}),
       Entrance(betaValEl, '~wipe', ['from-left'], {duration: 250})
     );
 
   timeline.addSequences(sequenceRevealVars);
+
+  timeline.addSequences(new AnimSequence().addBlocks(
+    Entrance(subtreeNodeUtilityEl, '~wipe', ['from-left']),
+  ));
 
   if (parentSubtree) {
     const parentVarsConnector = parentSubtree.querySelector(`.subtree__vars-connector`) as WbfkConnector;
