@@ -1,4 +1,5 @@
 import { WebFlik, WbfkConnector, AnimSequence, AnimTimeline } from "./WebFlik";
+import { ConnectorSetterBlock } from "./WebFlik/AnimBlockLine";
 
 const {
   Entrance,
@@ -9,7 +10,24 @@ const {
   ConnectorSetter,
   ConnectorEntrance,
   ConnectorExit,
-} = WebFlik.createAnimationBanks();
+} = WebFlik.createAnimationBanks({
+  emphases: {
+    [`change-text`]: {
+      generateRafMutators(newText: string) {
+        const oldText = this.domElem.innerHTML;
+
+        return [
+          () => { this.domElem.innerHTML = newText; },
+          () => { this.domElem.innerHTML = oldText; }
+        ];
+      },
+      config: {
+        commitStylesForcefully: true,
+        duration: 0,
+      }
+    }
+  }
+});
 
 const timeline = new AnimTimeline({timelineName: 'Alpha-Beta-Pruning', debugMode: true});
 
@@ -56,12 +74,16 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
   let bestMove = null;
 
   const subtreeEl = document.querySelector(`[data-id="${node.id}"]`)!
+  const subtreeNodeEl = subtreeEl.querySelector(`.subtree__node`)!;
+  const nodeColor = op === 'MAX' ? 'darkblue' : 'darkred';
   const varsEl = subtreeEl.querySelector('.subtree__node-vars')!;
   const alphaEl = subtreeEl.querySelector(`.subtree__node-var--alpha`)!;
   const alphaValEl = alphaEl.querySelector(`.subtree__node-var-value`)!;
   const betaEl = varsEl.querySelector(`.subtree__node-var--beta`)!;
   const betaValEl = betaEl.querySelector(`.subtree__node-var-value`)!;
   const subtreeNodeUtilityEl = subtreeEl.querySelector(`.subtree__node-utility`)!;
+  const textBox = subtreeEl.querySelector(`:scope > .text-box`);
+  const textBoxConnector = textBox?.parentElement?.querySelector('.text-box-connector') as WbfkConnector;
 
   const parentSubtree = document.querySelector(`[data-id="${node.parent?.id}"]`);
   const sequenceRevealVars = new AnimSequence()
@@ -70,6 +92,11 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
       undo() { betaValEl.innerHTML = alphaValEl.innerHTML = ``; },
     })
     .addBlocks(
+      Emphasis(textBox, 'change-text', [`Baba booey`]),
+      // Motion(textBox, '~move-to', [subtreeNodeEl, {alignment: 'left bottom', offsetSelfX: '-100%', offsetTargetX: '-1rem'}], {duration: 0}),
+      Entrance(textBox, '~fade-in', []),
+      ConnectorSetter(textBoxConnector, [textBox, 'right', 'center'], [subtreeNodeEl, 'left', 'center']),
+      ConnectorEntrance(textBoxConnector, '~trace', ['from-A']),
       Entrance(varsEl, '~fade-in', []),
       Entrance(alphaValEl, '~wipe', ['from-left'], {duration: 250}),
       Entrance(betaValEl, '~wipe', ['from-left'], {duration: 250})
@@ -77,7 +104,11 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
 
   timeline.addSequences(sequenceRevealVars);
 
-  timeline.addSequences(new AnimSequence().addBlocks(
+  timeline.addSequences(new AnimSequence({description: `Reveal default utility value`}).addBlocks(
+    ...exitTextBox(textBox),
+    textChange(textBox, `Since this is a ${op} node, we want to find the ${op === 'MAX' ? 'greatest' : 'least'} utility among the children. To start, let's set this initial utility to ${op === 'MAX' ? '-' : ''}&infin;.`),
+    ConnectorSetter(textBoxConnector, ['preserve'], [subtreeNodeUtilityEl, 'left', 'center']),
+    ...enterTextBox(textBox),
     Entrance(subtreeNodeUtilityEl, '~wipe', ['from-left']),
   ));
 
@@ -85,9 +116,10 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
     const parentVarsConnector = parentSubtree.querySelector(`.subtree__vars-connector`) as WbfkConnector;
     const parentVarsEl = parentSubtree.querySelector(`.subtree__node-vars`);
     sequenceRevealVars.addBlocksAt(
-      1,
+      -3,
       ConnectorSetter(parentVarsConnector, [parentVarsEl, 'left', 'center'], [varsEl, 'center', 'top']),
-      ConnectorEntrance(parentVarsConnector, '~trace', ['from-A'])
+      ConnectorEntrance(parentVarsConnector, '~trace', ['from-A']),
+      // Entrance(textBox, '~fade-in', []),
     );
 
     timeline.addSequences(new AnimSequence({autoplaysNextSequence: true}).addBlocks(
@@ -102,7 +134,16 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
     const baseChildConnector = document.querySelector(`.subtree__connector--base[data-to-id="${action.id}"]`) as WbfkConnector;
     const thickChildConnector = document.querySelector(`.subtree__connector--thick[data-to-id="${action.id}"]`) as WbfkConnector;
     timeline.addSequences(new AnimSequence().addBlocks(
+      ...exitTextBox(textBox),
       ConnectorEntrance(thickChildConnector, '~trace', ['from-A']),
+      textChange(textBox, `Now let's follow this bolded path to a child element to see if we can find a better utility value.`),
+      ConnectorSetter(textBoxConnector, [textBox, 'center', 'bottom'], [thickChildConnector, 'center', 'center']),
+      ...enterTextBox(textBox),
+    ));
+
+    timeline.addSequences(new AnimSequence({autoplaysNextSequence: true}).addBlocks(
+      Exit(textBox, '~fade-out', []),
+      ConnectorExit(textBoxConnector, '~trace', ['from-B'], {startsWithPrevious: true}),
     ));
 
     minOrMaxValue(op === 'MAX' ? 'MIN' : 'MAX', action, node.alpha, node.beta);
@@ -150,9 +191,6 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
           ...node.actions.slice(i+1).map( action => Transition(document.querySelector(`[data-id="${action.id}"]`), '~to', [{opacity: 0.5}], {startsNextBlock: true}) )
         ));
 
-        const subtreeNodeEl = subtreeEl.querySelector(`.subtree__node`)!;
-        const nodeColor = op === 'MAX' ? 'darkblue' : 'darkred';
-
         timeline.addSequences(new AnimSequence().addBlocks(
           Transition(subtreeNodeEl, '~to', [{backgroundColor: nodeColor}]),
           Transition(subtreeNodeEl.querySelector('.subtree__node-fill'), '~to', [{backgroundColor: nodeColor}], {startsWithPrevious: true}),
@@ -184,9 +222,6 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
     }
   };
 
-  const subtreeNodeEl = subtreeEl.querySelector(`.subtree__node`)!;
-  const nodeColor = op === 'MAX' ? 'darkblue' : 'darkred';
-
   timeline.addSequences(new AnimSequence().addBlocks(
     Transition(subtreeNodeEl, '~to', [{backgroundColor: nodeColor}]),
     Transition(subtreeNodeEl.querySelector('.subtree__node-fill'), '~to', [{backgroundColor: nodeColor}], {startsWithPrevious: true}),
@@ -199,7 +234,26 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
 
 
 
+// HELPER ANIM FUNCTIONS
+const exitTextBox = (domElem: Element | null) => {
+  const connector = domElem?.parentElement?.querySelector('.text-box-connector') as WbfkConnector;
+  return [
+    ConnectorExit(connector, '~trace', ['from-B']),
+    Exit(domElem, '~fade-out', [], {startsWithPrevious: true}),
+  ];
+}
 
+const enterTextBox = (domElem: Element | null) => {
+  const connector = domElem?.parentElement?.querySelector('.text-box-connector') as WbfkConnector;
+  return [
+    Entrance(domElem, '~fade-in', []),
+    ConnectorEntrance(connector, '~trace', ['from-A']),
+  ];
+};
+
+const textChange = (domElem: Element | null, newInnerHtml: string) => {
+  return Emphasis(domElem, 'change-text', [newInnerHtml.replace('Infinity', '&infin;')]);
+};
 
 
 

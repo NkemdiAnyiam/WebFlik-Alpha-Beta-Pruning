@@ -1,0 +1,13 @@
+.text-box {
+  position: absolute;
+  translate: -100% 0;
+  z-index: 1;
+  border: 2px solid #333;
+  background-color: #ffff9e99;
+  padding: 0.25rem 0.5rem;
+  max-width: 20rem;
+}
+
+.text-box-connector {
+  stroke-width: 2px;
+}
