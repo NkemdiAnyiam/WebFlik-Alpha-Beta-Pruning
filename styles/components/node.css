@@ -118,7 +118,13 @@
   stroke-dasharray: 2;
 }
 
-.subtree__connector--thick {
+.subtree__connector--visit {
+  stroke-width: 6px;
+  z-index: -1;
+  stroke-dasharray: 1;
+}
+
+.subtree__connector--solution {
   stroke-width: 6px;
   z-index: -1;
 }

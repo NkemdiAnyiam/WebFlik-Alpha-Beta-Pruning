@@ -16,7 +16,7 @@ export function sceneCreator(root: TreeNode) {
   tree?.insertAdjacentElement('beforeend', nodeEl);
   removeTemplate('subtree');
   removeTemplate('subtree__connector-base');
-  removeTemplate('subtree__connector-thick');
+  removeTemplate('subtree__connector-visit');
   // removeTemplate('strike-through');
 }
 
@@ -41,13 +41,18 @@ function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
     childrenEl?.insertAdjacentElement('beforeend', child);
 
     const connectorBase = cloneTemplate('subtree__connector-base') as WbfkConnector;
-    const connectorThick = cloneTemplate('subtree__connector-thick') as WbfkConnector;
+    const connectorVisit = cloneTemplate('subtree__connector-visit') as WbfkConnector;
+    const connectorSolution = cloneTemplate('subtree__connector-solution') as WbfkConnector;
     connectorsContainerEl.insertAdjacentElement('beforeend', connectorBase);
-    connectorsContainerEl.insertAdjacentElement('beforeend', connectorThick);
-    connectorThick.dataset.toId = connectorBase.dataset.toId = `${node.actions[i].id}`;
-    ConnectorSetter(connectorBase, [subtreeNodeEl, 'center', 'bottom - 5%'], [child.querySelector('.subtree__node'), 'center', 'top + 5%']).play();
-    ConnectorSetter(connectorThick, [subtreeNodeEl, 'center', 'bottom - 5%'], [child.querySelector('.subtree__node'), 'center', 'top + 5%']).play();
-    ConnectorEntrance(connectorBase, '~appear', []).play();
+    connectorsContainerEl.insertAdjacentElement('beforeend', connectorVisit);
+    connectorsContainerEl.insertAdjacentElement('beforeend', connectorSolution);
+    connectorSolution.dataset.toId = connectorVisit.dataset.toId = connectorBase.dataset.toId = `${node.actions[i].id}`;
+    new AnimSequence().addBlocks(
+      ConnectorSetter(connectorBase, [subtreeNodeEl, 'center', 'bottom - 5%'], [child.querySelector('.subtree__node'), 'center', 'top + 5%']),
+      ConnectorSetter(connectorVisit, [subtreeNodeEl, 'center', 'bottom - 5%'], [child.querySelector('.subtree__node'), 'center', 'top + 5%']),
+      ConnectorSetter(connectorSolution, [subtreeNodeEl, 'center', 'bottom - 5%'], [child.querySelector('.subtree__node'), 'center', 'top + 5%']),
+      ConnectorEntrance(connectorBase, '~appear', []),
+    ).play();
   }
 
   // if the current node is a leaf, add the utility value to the text content and style the node differently to indicate finalized value

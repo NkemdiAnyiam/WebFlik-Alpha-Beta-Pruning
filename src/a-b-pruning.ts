@@ -152,17 +152,19 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
     Entrance(subtreeNodeUtilityEl, '~wipe', ['from-left']),
   ));
   
+  let currBestSolnConnector: WbfkConnector | null = null;
   for (let i = 0; i < node.actions.length; ++i) {
     const action = node.actions[i];
 
     const actionSubtreeEl = document.querySelector(`[data-id="${action.id}"]`);
     const baseChildConnector = document.querySelector(`.subtree__connector--base[data-to-id="${action.id}"]`) as WbfkConnector;
-    const thickChildConnector = document.querySelector(`.subtree__connector--thick[data-to-id="${action.id}"]`) as WbfkConnector;
+    const visitChildConnector = document.querySelector(`.subtree__connector--visit[data-to-id="${action.id}"]`) as WbfkConnector;
+    const solutionChildConnector = document.querySelector(`.subtree__connector--solution[data-to-id="${action.id}"]`) as WbfkConnector;
     timeline.addSequences(new AnimSequence({description: `Trace to child ${i}.`}).addBlocks(
       ...exitTextBox(textBox),
-      ConnectorEntrance(thickChildConnector, '~trace', ['from-A']),
-      textChange(textBox, `Now let's follow this bolded path to child ${i} to see if we can find a better (${greaterOrLesser}) utility value.`),
-      ConnectorSetter(textBoxConnector, [textBox, 'center', 'bottom'], [thickChildConnector, 'center', 'center']),
+      ConnectorEntrance(visitChildConnector, '~trace', ['from-A']),
+      textChange(textBox, `Now let's follow this bolded path to visit child ${i} to see if we can find a better (${greaterOrLesser}) utility value.`),
+      ConnectorSetter(textBoxConnector, [textBox, 'center', 'bottom'], [visitChildConnector, 'center', 'center']),
       ...enterTextBox(textBox),
     ));
 
@@ -174,9 +176,9 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
 
     minOrMaxValue(opInverted, action, node.alpha, node.beta);
 
-    // Erase thick connector to child and solidify base connection
-    timeline.addSequences(new AnimSequence({description: `Erase thick connector to child ${i}.`}).addBlocks(
-      ConnectorExit(thickChildConnector, '~trace', ['from-B']),
+    // Erase visit connector to child and solidify base connection
+    timeline.addSequences(new AnimSequence({description: `Erase visit connector to child ${i}.`}).addBlocks(
+      ConnectorExit(visitChildConnector, '~trace', ['from-B']),
       Transition(baseChildConnector, '~to', [{strokeDasharray: 0}], {startsWithPrevious: true})
     ));
 
@@ -205,7 +207,17 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
             textChange(subtreeNodeUtilityEl, `${bestValCopy}`),
             Entrance(subtreeNodeUtilityEl, '~wipe', ['from-left'])
           ),
+          new AnimSequence().addBlocks(
+            ...exitTextBox(textBox),
+            textChange(textBox, `We also store the child node as the new best move for this solution path.`),
+            ConnectorSetter(textBoxConnector, [textBox, 'center', 'bottom'], [solutionChildConnector, 'center', 'center']),
+            ...(currBestSolnConnector ? [ConnectorExit(currBestSolnConnector, '~trace', ['from-bottom'])] : []),
+            ConnectorEntrance(solutionChildConnector, '~trace', ['from-top']),
+            ...enterTextBox(textBox),
+          )
       );
+
+      currBestSolnConnector = solutionChildConnector;
 
       // if equals or beats variable (beta if MAX, alpha if MIN), cut
       if (i+1 < node.actions.length) {
@@ -214,6 +226,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
             .addBlocks(
               ...exitTextBox(textBox),
               textChange(textBox, `The next step is to see if we can skip the remaining subtrees for this node. The goal is to find out if taking this path would be pointless for the parent.`),
+              ConnectorSetter(textBoxConnector, [textBox, 'right', 'center'], [subtreeNodeEl, 'left + 25%', 'center']),
               ...enterTextBox(textBox)
             ),
         );
@@ -299,7 +312,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
           .addBlocks(
             ...exitTextBox(textBox),
             textChange(textBox, `Now we need to see if we should update ${alphaOrBeta}. This is because we want to pass it down to the next child to let it know what this node's current best option is.`),
-            ConnectorSetter(textBoxConnector, ['preserve'], [varsEl, 'left', 'center']),
+            ConnectorSetter(textBoxConnector, [textBox, 'right', 'center'], [varsEl, 'left', 'center']),
             ...enterTextBox(textBox)
           )
       );
@@ -345,7 +358,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
           ),
           new AnimSequence().addBlocks(
             ...exitTextBox(textBox),
-            textChange(textBox, `Since this is a ${op} node, the new utility value is worse, so we do not perform an update here.`),
+            textChange(textBox, `Since this is a ${op} node, that means the new utility value (${childUtilCopy}) is worse, so we do not perform an update here.`),
             ...enterTextBox(textBox),
           ),
       );
@@ -354,7 +367,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
 
   timeline.addSequences(new AnimSequence().addBlocks(
     ...exitTextBox(textBox),
-    textChange(textBox, `There are no more children (actions) left, so the final utility value of this node is ${bestVal}. Let's return it.`),
+    textChange(textBox, `There are no more children (actions) left, so there is no need to attempt pruning. Thus, the final utility value of this node is ${bestVal}. Let's return it.`),
     ConnectorSetter(textBoxConnector, ['preserve'], [subtreeNodeEl, 'left + 25%', 'center']),
     ...enterTextBox(textBox),
   ));
