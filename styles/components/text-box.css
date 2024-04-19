@@ -1,13 +1,30 @@
 .text-box {
   position: absolute;
   translate: -100% 0;
+  margin-right: -8rem;
+  margin-top: -4rem;
   z-index: 1;
   border: 2px solid #333;
-  background-color: #ffff9e99;
+  background-color: #ffff9ecc;
+  backdrop-filter: blur(2);
   padding: 0.25rem 0.5rem;
   max-width: 20rem;
 }
 
+.text-box--max {
+  border: 2px solid darkblue;
+}
+.text-box--min {
+  border: 2px solid darkred;
+}
+
 .text-box-connector {
   stroke-width: 2px;
+}
+
+.text-box--max + .text-box-connector {
+  stroke: darkblue;
+}
+.text-box--min + .text-box-connector {
+  stroke: darkred;
 }

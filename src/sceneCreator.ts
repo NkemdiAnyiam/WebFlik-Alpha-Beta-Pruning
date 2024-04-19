@@ -25,6 +25,8 @@ function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
   // subtreeEl.dataset.depth = `${node.depth}`;
   // subtreeEl.dataset.index = `${node.index}`;
   subtreeEl.dataset.id = `${node.id}`;
+  const textBox = subtreeEl.querySelector(`:scope .text-box`)!;
+  textBox.classList.add(`text-box--${nodeType.toLowerCase()}`)
   const subtreeNodeEl = subtreeEl.querySelector('.subtree__node')!;
   subtreeNodeEl.classList.add(`subtree__node--${nodeType.toLowerCase()}`);
   const utilityEl = subtreeNodeEl.querySelector('.subtree__node-utility')!;
