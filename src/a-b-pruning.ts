@@ -189,6 +189,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
 
     // Erase visit connector to child and solidify base connection
     timeline.addSequences(new AnimSequence({description: `Erase visit connector to child ${i}.`}).addBlocks(
+      Scroller(document.documentElement, '~scroll-self', [subtreeNodeEl, {scrollableOffset: [0.5, 0.5]}]),
       ConnectorExit(visitChildConnector, '~trace', ['from-B']),
       Transition(baseChildConnector, '~to', [{strokeDasharray: 0}], {startsWithPrevious: true})
     ));
