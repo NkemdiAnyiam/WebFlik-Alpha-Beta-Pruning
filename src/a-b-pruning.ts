@@ -17,8 +17,8 @@ const {
         const oldText = this.domElem.innerHTML;
 
         return [
-          () => { this.domElem.innerHTML = newText; },
-          () => { this.domElem.innerHTML = oldText; }
+          () => { this.domElem.innerHTML = newText.replace('Infinity', '&infin;'); },
+          () => { this.domElem.innerHTML = oldText.replace('Infinity', '&infin;'); }
         ];
       },
       config: {
@@ -73,9 +73,12 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
   let bestVal = op === 'MAX' ? -Infinity : Infinity;
   let bestMove = null;
 
+  const greatestOrLeast = op === 'MAX' ? 'greatest' : 'least';
+  const greaterOrLesser = op === 'MAX' ? 'greater' : 'lesser';
+  const nodeColor = op === 'MAX' ? 'darkblue' : 'darkred';
+
   const subtreeEl = document.querySelector(`[data-id="${node.id}"]`)!
   const subtreeNodeEl = subtreeEl.querySelector(`.subtree__node`)!;
-  const nodeColor = op === 'MAX' ? 'darkblue' : 'darkred';
   const varsEl = subtreeEl.querySelector('.subtree__node-vars')!;
   const alphaEl = subtreeEl.querySelector(`.subtree__node-var--alpha`)!;
   const alphaValEl = alphaEl.querySelector(`.subtree__node-var-value`)!;
@@ -86,16 +89,20 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
   const textBoxConnector = textBox?.parentElement?.querySelector('.text-box-connector') as WbfkConnector;
 
   const parentSubtree = document.querySelector(`[data-id="${node.parent?.id}"]`);
-  const sequenceRevealVars = new AnimSequence()
+  const sequenceRevealVars = new AnimSequence({description: `Reveal the alpha and beta variables`})
     .setOnStart({
       do() { alphaValEl.innerHTML = `${alpha}`.replace('Infinity', '&infin;'); betaValEl.innerHTML = `${beta}`.replace('Infinity', '&infin;'); },
       undo() { betaValEl.innerHTML = alphaValEl.innerHTML = ``; },
     })
     .addBlocks(
-      Emphasis(textBox, 'change-text', [`Baba booey`]),
+      Emphasis(textBox, 'change-text', [
+        parentSubtree
+        ? `The parent passed its &alpha; and &beta; values to us, which were ${alpha} and ${beta} respectively.`
+        : `Let's start with the root node. Since it's the root, no &alpha; or &beta; are passed down to us, so they should be -&infin; and &infin;.`
+      ]),
       // Motion(textBox, '~move-to', [subtreeNodeEl, {alignment: 'left bottom', offsetSelfX: '-100%', offsetTargetX: '-1rem'}], {duration: 0}),
       Entrance(textBox, '~fade-in', []),
-      ConnectorSetter(textBoxConnector, [textBox, 'right', 'center'], [subtreeNodeEl, 'left', 'center']),
+      ConnectorSetter(textBoxConnector, [textBox, 'right', 'center'], [subtreeNodeEl, 'left + 25%', 'center']),
       ConnectorEntrance(textBoxConnector, '~trace', ['from-A']),
       Entrance(varsEl, '~fade-in', []),
       Entrance(alphaValEl, '~wipe', ['from-left'], {duration: 250}),
@@ -104,14 +111,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
 
   timeline.addSequences(sequenceRevealVars);
 
-  timeline.addSequences(new AnimSequence({description: `Reveal default utility value`}).addBlocks(
-    ...exitTextBox(textBox),
-    textChange(textBox, `Since this is a ${op} node, we want to find the ${op === 'MAX' ? 'greatest' : 'least'} utility among the children. To start, let's set this initial utility to ${op === 'MAX' ? '-' : ''}&infin;.`),
-    ConnectorSetter(textBoxConnector, ['preserve'], [subtreeNodeUtilityEl, 'left', 'center']),
-    ...enterTextBox(textBox),
-    Entrance(subtreeNodeUtilityEl, '~wipe', ['from-left']),
-  ));
-
+  // if this is not the root, draw connector from parent alpha/beta box to this alpha/beta box to indicate passing down values
   if (parentSubtree) {
     const parentVarsConnector = parentSubtree.querySelector(`.subtree__vars-connector`) as WbfkConnector;
     const parentVarsEl = parentSubtree.querySelector(`.subtree__node-vars`);
@@ -119,13 +119,20 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
       -3,
       ConnectorSetter(parentVarsConnector, [parentVarsEl, 'left', 'center'], [varsEl, 'center', 'top']),
       ConnectorEntrance(parentVarsConnector, '~trace', ['from-A']),
-      // Entrance(textBox, '~fade-in', []),
     );
 
     timeline.addSequences(new AnimSequence({autoplaysNextSequence: true}).addBlocks(
       ConnectorExit(parentVarsConnector, '~fade-out', [])
     ));
   }
+
+  timeline.addSequences(new AnimSequence({description: `Reveal default utility value`}).addBlocks(
+    ...exitTextBox(textBox),
+    textChange(textBox, `Since this is a ${op} node, we want to find the ${greatestOrLeast} utility among the children. To start, let's set this initial utility to ${op === 'MAX' ? '-' : ''}&infin;.`),
+    ConnectorSetter(textBoxConnector, ['preserve'], [subtreeNodeUtilityEl, 'left', 'center']),
+    ...enterTextBox(textBox),
+    Entrance(subtreeNodeUtilityEl, '~wipe', ['from-left']),
+  ));
   
   for (let i = 0; i < node.actions.length; ++i) {
     const action = node.actions[i];
@@ -133,22 +140,22 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
     const actionSubtreeEl = document.querySelector(`[data-id="${action.id}"]`);
     const baseChildConnector = document.querySelector(`.subtree__connector--base[data-to-id="${action.id}"]`) as WbfkConnector;
     const thickChildConnector = document.querySelector(`.subtree__connector--thick[data-to-id="${action.id}"]`) as WbfkConnector;
-    timeline.addSequences(new AnimSequence().addBlocks(
+    timeline.addSequences(new AnimSequence({description: `Trace to child ${i}.`}).addBlocks(
       ...exitTextBox(textBox),
       ConnectorEntrance(thickChildConnector, '~trace', ['from-A']),
-      textChange(textBox, `Now let's follow this bolded path to a child element to see if we can find a better utility value.`),
+      textChange(textBox, `Now let's follow this bolded path to a child element to see if we can find a better (${greaterOrLesser}) utility value.`),
       ConnectorSetter(textBoxConnector, [textBox, 'center', 'bottom'], [thickChildConnector, 'center', 'center']),
       ...enterTextBox(textBox),
     ));
 
-    timeline.addSequences(new AnimSequence({autoplaysNextSequence: true}).addBlocks(
+    timeline.addSequences(new AnimSequence({autoplaysNextSequence: true, description: `Fade out our text box so child text box can steal the show.`}).addBlocks(
       Exit(textBox, '~fade-out', []),
       ConnectorExit(textBoxConnector, '~trace', ['from-B'], {startsWithPrevious: true}),
     ));
 
     minOrMaxValue(op === 'MAX' ? 'MIN' : 'MAX', action, node.alpha, node.beta);
 
-    timeline.addSequences(new AnimSequence().addBlocks(
+    timeline.addSequences(new AnimSequence({description: `Erase thick connector to child ${i}.`}).addBlocks(
       ConnectorExit(thickChildConnector, '~trace', ['from-B']),
       Transition(baseChildConnector, '~to', [{strokeDasharray: 0}], {startsWithPrevious: true})
     ));
