@@ -66,6 +66,19 @@ export function alphaBetaSearch(root: TreeNode) {
 
 function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: number): void {
   if (node.isTerminal) {
+    const subtreeEl = document.querySelector(`[data-id="${node.id}"]`)!
+    const subtreeNodeUtilityEl = subtreeEl.querySelector(`.subtree__node-utility`)!;
+    const textBox = subtreeEl.querySelector(`:scope > .text-box`);
+    const textBoxConnector = textBox?.parentElement?.querySelector('.text-box-connector') as WbfkConnector;
+    timeline.addSequences(new AnimSequence({description: `Explain that this is a leaf node whose utility value can be returned immediately.`}).addBlocks(
+      textChange(textBox, `This is a leaf node, so it has a known utility value, ${node.utility}. We can immediately return it.`),
+      ConnectorSetter(textBoxConnector, [textBox, 'right', 'center'], [subtreeNodeUtilityEl, 'left', 'center']),
+      ...enterTextBox(textBox)
+    ));
+
+    timeline.addSequences(new AnimSequence({description: `Hide leaf node text box`, autoplaysNextSequence: true}).addBlocks(
+      ...exitTextBox(textBox)
+    ));
     return;
   }
   node.alpha = alpha;
@@ -150,6 +163,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
       ...enterTextBox(textBox),
     ));
 
+    // Fade out our text box so child text box can shine
     timeline.addSequences(new AnimSequence({autoplaysNextSequence: true, description: `Fade out our text box so child text box can steal the show.`}).addBlocks(
       Exit(textBox, '~fade-out', []),
       ConnectorExit(textBoxConnector, '~trace', ['from-B'], {startsWithPrevious: true}),
@@ -157,30 +171,37 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
 
     minOrMaxValue(op === 'MAX' ? 'MIN' : 'MAX', action, node.alpha, node.beta);
 
+    // Erase thick connector to child and solidify base connection
     timeline.addSequences(new AnimSequence({description: `Erase thick connector to child ${i}.`}).addBlocks(
       ConnectorExit(thickChildConnector, '~trace', ['from-B']),
       Transition(baseChildConnector, '~to', [{strokeDasharray: 0}], {startsWithPrevious: true})
     ));
+
+
     // check to see if action.utility is better
     if (betterUtility(op, action, bestVal)) {
       const oldBestVal = bestVal;
       bestVal = action.utility;
       bestMove = action;
-
+  
       const bestValCopy = bestVal;
+
+      // replace old utility value with new better one
       timeline.addSequences(
         new AnimSequence({autoplays: true})
           .addBlocks(
-            Exit(subtreeNodeUtilityEl, '~wipe', ['from-right'])
+            textChange(textBox, `The child's utility value ${bestValCopy} is ${greaterOrLesser} than this node's current utility value ${oldBestVal}.`),
+            ConnectorSetter(textBoxConnector, [textBox, 'right', 'center'], [subtreeNodeUtilityEl, 'left', 'center']),
+            ...enterTextBox(textBox),
           ),
-        new AnimSequence({autoplays: true})
-          .setOnStart({
-            do() { subtreeNodeUtilityEl.innerHTML = `${bestValCopy}`; },
-            undo() { subtreeNodeUtilityEl.innerHTML = `${oldBestVal}`.replace(/Infinity/g, '&infin;'); }
-          })
-          .addBlocks(
+          new AnimSequence().addBlocks(
+            ...exitTextBox(textBox),
+            textChange(textBox, `Since this is a ${op} node, the new utility value is better, so let's replace ${oldBestVal} with ${bestValCopy}.`),
+            ...enterTextBox(textBox),
+            Exit(subtreeNodeUtilityEl, '~wipe', ['from-right']),
+            textChange(subtreeNodeUtilityEl, `${bestValCopy}`),
             Entrance(subtreeNodeUtilityEl, '~wipe', ['from-left'])
-          )
+          ),
       );
 
       // if equals or beats variable (beta if MAX, alpha if MIN), cut
@@ -229,6 +250,24 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
         );
       }
     }
+    // if action.utility was not better
+    else {
+      const childUtilCopy = action.utility;
+      const bestValCopy = bestVal;
+      timeline.addSequences(
+        new AnimSequence({autoplays: true})
+          .addBlocks(
+            textChange(textBox, `The child's utility value ${childUtilCopy} is not ${greaterOrLesser} than this node's current utility value ${bestValCopy}.`),
+            ConnectorSetter(textBoxConnector, [textBox, 'right', 'center'], [subtreeNodeUtilityEl, 'left', 'center']),
+            ...enterTextBox(textBox),
+          ),
+          new AnimSequence().addBlocks(
+            ...exitTextBox(textBox),
+            textChange(textBox, `Since this is a ${op} node, the new utility value is worse, so we do not perform an update here.`),
+            ...enterTextBox(textBox),
+          ),
+      );
+    }
   };
 
   timeline.addSequences(new AnimSequence().addBlocks(
@@ -261,7 +300,7 @@ const enterTextBox = (domElem: Element | null) => {
 };
 
 const textChange = (domElem: Element | null, newInnerHtml: string) => {
-  return Emphasis(domElem, 'change-text', [newInnerHtml.replace(/Infinity/g, '&infin;')]);
+  return Emphasis(domElem, 'change-text', [newInnerHtml]);
 };
 
 
