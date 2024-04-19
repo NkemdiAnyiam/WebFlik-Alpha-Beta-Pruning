@@ -17,8 +17,8 @@ const {
         const oldText = this.domElem.innerHTML;
 
         return [
-          () => { this.domElem.innerHTML = newText.replace('Infinity', '&infin;'); },
-          () => { this.domElem.innerHTML = oldText.replace('Infinity', '&infin;'); }
+          () => { this.domElem.innerHTML = newText.replace(/Infinity/g, '&infin;'); },
+          () => { this.domElem.innerHTML = oldText.replace(/Infinity/g, '&infin;'); }
         ];
       },
       config: {
@@ -91,7 +91,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
   const parentSubtree = document.querySelector(`[data-id="${node.parent?.id}"]`);
   const sequenceRevealVars = new AnimSequence({description: `Reveal the alpha and beta variables`})
     .setOnStart({
-      do() { alphaValEl.innerHTML = `${alpha}`.replace('Infinity', '&infin;'); betaValEl.innerHTML = `${beta}`.replace('Infinity', '&infin;'); },
+      do() { alphaValEl.innerHTML = `${alpha}`.replace(/Infinity/g, '&infin;'); betaValEl.innerHTML = `${beta}`.replace(/Infinity/g, '&infin;'); },
       undo() { betaValEl.innerHTML = alphaValEl.innerHTML = ``; },
     })
     .addBlocks(
@@ -174,7 +174,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
         new AnimSequence({autoplays: true})
           .setOnStart({
             do() { subtreeNodeUtilityEl.innerHTML = `${bestValCopy}`; },
-            undo() { subtreeNodeUtilityEl.innerHTML = `${oldBestVal}`.replace('Infinity', '&infin;'); }
+            undo() { subtreeNodeUtilityEl.innerHTML = `${oldBestVal}`.replace(/Infinity/g, '&infin;'); }
           })
           .addBlocks(
             Entrance(subtreeNodeUtilityEl, '~wipe', ['from-left'])
@@ -219,7 +219,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
           new AnimSequence({autoplays: true})
             .setOnStart({
               do() { varValEl.innerHTML = `${varValCopy}`; },
-              undo() { varValEl.innerHTML = `${prevVarVal}`.replace('Infinity', '&infin;'); }
+              undo() { varValEl.innerHTML = `${prevVarVal}`.replace(/Infinity/g, '&infin;'); }
             })
             .addBlocks(
               Entrance(varValEl, '~wipe', ['from-left'])
