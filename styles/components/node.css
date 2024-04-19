@@ -33,6 +33,16 @@
   color: darkred;
 }
 
+.subtree--max > .subtree__root-container .subtree__node-var--beta {
+  background-color: darkred;
+  color: #f7f7f7;
+}
+
+.subtree--min > .subtree__root-container .subtree__node-var--alpha {
+  background-color: darkblue;
+  color: #f7f7f7;
+}
+
 .subtree__node {
   position: relative;
   width: 6rem;
