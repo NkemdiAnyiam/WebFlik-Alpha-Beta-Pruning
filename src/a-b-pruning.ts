@@ -60,6 +60,17 @@ export function createNodes(dataStruct: any[], depth = 0, index = 0): TreeNode {
 
 export function alphaBetaSearch(root: TreeNode) {
   minOrMaxValue('MAX', root, -Infinity, Infinity);
+  let currNode: TreeNode | null = root;
+  let seq = new AnimSequence({description: `Trace solution path`});
+  while(currNode?.nextMove) {
+    const solnConnector = document.querySelector(`.subtree__connector--solution[data-to-id="${currNode.nextMove?.id}"]`) as WbfkConnector;
+    console.log(solnConnector);
+    seq.addBlocks(
+      Transition(solnConnector, '~to', [{strokeWidth: `15px`}])
+    )
+    currNode = currNode.nextMove;
+  }
+  timeline.addSequences(seq);
   console.log(root.utility);
   return root;
 }
@@ -258,7 +269,6 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
         if (meetsCutCondition(op, node, bestVal)) {
           [node.utility, node.nextMove] = [bestVal, bestMove];
 
-          
           timeline.addSequences(
             new AnimSequence()
               .addBlocks(
