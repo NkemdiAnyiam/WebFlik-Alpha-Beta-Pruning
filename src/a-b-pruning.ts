@@ -10,6 +10,7 @@ const {
   ConnectorSetter,
   ConnectorEntrance,
   ConnectorExit,
+  Scroller
 } = WebFlik.createAnimationBanks({
   emphases: {
     [`change-text`]: {
@@ -95,6 +96,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
       undo() { betaValEl.innerHTML = alphaValEl.innerHTML = ``; },
     })
     .addBlocks(
+      Scroller(document.documentElement, '~scroll-self', [subtreeNodeEl, {scrollableOffset: [0.5, 0.5]}]),
       Emphasis(textBox, 'change-text', [
         parentSubtree
         ? `The parent passed its &alpha; and &beta; values to us, which were ${alpha} and ${beta} respectively.`
@@ -259,7 +261,7 @@ const enterTextBox = (domElem: Element | null) => {
 };
 
 const textChange = (domElem: Element | null, newInnerHtml: string) => {
-  return Emphasis(domElem, 'change-text', [newInnerHtml.replace('Infinity', '&infin;')]);
+  return Emphasis(domElem, 'change-text', [newInnerHtml.replace(/Infinity/g, '&infin;')]);
 };
 
 
