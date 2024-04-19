@@ -13,9 +13,11 @@
 
 .text-box--max {
   border: 2px solid darkblue;
+  background-color: #e7f4ffcc;
 }
 .text-box--min {
   border: 2px solid darkred;
+  background-color: #ffe7e7cc;
 }
 
 .text-box-connector {
