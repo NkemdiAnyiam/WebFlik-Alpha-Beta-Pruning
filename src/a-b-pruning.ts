@@ -126,7 +126,7 @@ function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: n
       Scroller(document.documentElement, '~scroll-self', [subtreeNodeEl, {scrollableOffset: [0.5, 0.5]}]),
       Emphasis(textBox, 'change-text', [
         parentSubtree
-        ? `The parent passed its &alpha; value (${alpha}) and &beta; value (${beta}) to us. Since we are a ${op} node, ${alphaOrBetaInverted} will never be updated—it just tell us our parent's best option so far.`
+        ? `The parent passed its &alpha; value (${alpha}) and &beta; value (${beta}) to us. Since we are a ${op} node, ${alphaOrBetaInverted} will never be updated—it just tells us our parent's best option so far.`
         : `Let's start with the root node. Since it's the root, no &alpha; or &beta; are passed down to us, so they should be -&infin; and &infin;.`
       ]),
       // Motion(textBox, '~move-to', [subtreeNodeEl, {alignment: 'left bottom', offsetSelfX: '-100%', offsetTargetX: '-1rem'}], {duration: 0}),
