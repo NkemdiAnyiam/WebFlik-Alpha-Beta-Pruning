@@ -1,4 +1,3 @@
-console.log('ALPHA BETA');
 import { createNodes, alphaBetaSearch } from "./a-b-pruning";
 import { sceneCreator } from "./sceneCreator";
 

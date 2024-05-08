@@ -4,9 +4,17 @@
   max-width: 1560px;
 }
 
+h1 {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+}
+
 main {
   width: 150%;
+}
 
+.viz {
   display: flex;
   justify-content: space-around;
 }

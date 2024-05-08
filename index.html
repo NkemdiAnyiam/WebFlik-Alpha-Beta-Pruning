@@ -9,55 +9,58 @@
 </head>
 <body>
   <main class="main">
-    <div class="tree-container">
-      <template id="subtree">
-        <div class="subtree">
-          <div class="subtree__root-container">
-            <!-- alpha and beta -->
-            <div class="subtree__node-vars wbfk-invisible">
-              <div class="subtree__node-var subtree__node-var--alpha">
-                &alpha;= <span class="subtree__node-var-value wbfk-invisible"></span>
+    <h1>Alpha-Beta Pruning</h1>
+    <div class="viz">
+      <div class="tree-container">
+        <template id="subtree">
+          <div class="subtree">
+            <div class="subtree__root-container">
+              <!-- alpha and beta -->
+              <div class="subtree__node-vars wbfk-invisible">
+                <div class="subtree__node-var subtree__node-var--alpha">
+                  &alpha;= <span class="subtree__node-var-value wbfk-invisible"></span>
+                </div>
+                <div class="subtree__node-var subtree__node-var--beta">
+                  &beta;= <span class="subtree__node-var-value wbfk-invisible"></span>
+                </div>
               </div>
-              <div class="subtree__node-var subtree__node-var--beta">
-                &beta;= <span class="subtree__node-var-value wbfk-invisible"></span>
+  
+              <!-- node -->
+              <div class="subtree__node">
+                <div class="subtree__node-fill">
+                  <span class="subtree__node-utility wbfk-hidden"></span>
+                </div>
               </div>
             </div>
-
-            <!-- node -->
-            <div class="subtree__node">
-              <div class="subtree__node-fill">
-                <span class="subtree__node-utility wbfk-hidden"></span>
-              </div>
+  
+            <div class="text-box wbfk-invisible">
+              Hello! This is probably the only time you'll ever see your family again!!
             </div>
+            <wbfk-connector class="text-box-connector"></wbfk-connector>
+  
+            <!-- connectors to children -->
+            <div class="subtree__connectors">
+              <wbfk-connector class="strike-through wbfk-hidden"></wbfk-connector>
+              <wbfk-connector class="subtree__vars-connector wbfk-hidden" b-marker></wbfk-connector>
+            </div>
+  
+            <!-- children -->
+            <div class="subtree__children"></div>
           </div>
-
-          <div class="text-box wbfk-invisible">
-            Hello! This is probably the only time you'll ever see your family again!!
-          </div>
-          <wbfk-connector class="text-box-connector"></wbfk-connector>
-
-          <!-- connectors to children -->
-          <div class="subtree__connectors">
-            <wbfk-connector class="strike-through wbfk-hidden"></wbfk-connector>
-            <wbfk-connector class="subtree__vars-connector wbfk-hidden" b-marker></wbfk-connector>
-          </div>
-
-          <!-- children -->
-          <div class="subtree__children"></div>
-        </div>
-      </template>
-
-      <template id="subtree__connector-base">
-        <wbfk-connector class="subtree__connector subtree__connector--base"></wbfk-connector>
-      </template>
-
-      <template id="subtree__connector-visit">
-        <wbfk-connector class="subtree__connector subtree__connector--visit wbfk-hidden"></wbfk-connector>
-      </template>
-
-      <template id="subtree__connector-solution">
-        <wbfk-connector class="subtree__connector subtree__connector--solution wbfk-hidden"></wbfk-connector>
-      </template>
+        </template>
+  
+        <template id="subtree__connector-base">
+          <wbfk-connector class="subtree__connector subtree__connector--base"></wbfk-connector>
+        </template>
+  
+        <template id="subtree__connector-visit">
+          <wbfk-connector class="subtree__connector subtree__connector--visit wbfk-hidden"></wbfk-connector>
+        </template>
+  
+        <template id="subtree__connector-solution">
+          <wbfk-connector class="subtree__connector subtree__connector--solution wbfk-hidden"></wbfk-connector>
+        </template>
+      </div>
     </div>
   </main>
     

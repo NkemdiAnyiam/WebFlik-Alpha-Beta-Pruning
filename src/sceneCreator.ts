@@ -5,18 +5,20 @@ import { WebFlik, WbfkConnector, AnimSequence } from "./WebFlik";
 const {
   ConnectorSetter,
   ConnectorEntrance,
-  Transition
+  Transition,
+  Scroller
 } = WebFlik.createAnimationBanks();
 
 const tree = document.querySelector('.tree-container');
 
 export function sceneCreator(root: TreeNode) {
-  const nodeEl = buildTreeR(root, 'MAX');
+  const subtreeEl = buildTreeR(root, 'MAX');
 
-  tree?.insertAdjacentElement('beforeend', nodeEl);
+  tree?.insertAdjacentElement('beforeend', subtreeEl);
   removeTemplate('subtree');
   removeTemplate('subtree__connector-base');
   removeTemplate('subtree__connector-visit');
+  Scroller(document.documentElement, '~scroll-self', [subtreeEl.querySelector('.subtree__node'), {scrollableOffset: [0.5, 0.5]}]).play();
   // removeTemplate('strike-through');
 }
 

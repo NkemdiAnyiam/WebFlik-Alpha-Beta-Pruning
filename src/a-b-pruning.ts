@@ -64,7 +64,6 @@ export function alphaBetaSearch(root: TreeNode) {
   let seq = new AnimSequence({description: `Trace solution path`});
   while(currNode?.nextMove) {
     const solnConnector = document.querySelector(`.subtree__connector--solution[data-to-id="${currNode.nextMove?.id}"]`) as WbfkConnector;
-    console.log(solnConnector);
     seq.addBlocks(
       Transition(solnConnector, '~to', [{strokeWidth: `15px`}])
     )
