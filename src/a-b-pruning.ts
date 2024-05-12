@@ -1,17 +1,6 @@
 import { WebFlik, WbfkConnector, AnimSequence, AnimTimeline } from "./WebFlik";
-import { ConnectorSetterBlock } from "./WebFlik/AnimBlockLine";
 
-const {
-  Entrance,
-  Exit,
-  Emphasis,
-  Motion,
-  Transition,
-  ConnectorSetter,
-  ConnectorEntrance,
-  ConnectorExit,
-  Scroller
-} = WebFlik.createAnimationBanks({
+const { Entrance, Exit, Emphasis, Motion, Transition, ConnectorSetter, ConnectorEntrance, ConnectorExit, Scroller } = WebFlik.createAnimationBanks({
   emphases: {
     [`change-text`]: {
       generateRafMutators(newText: string) {
