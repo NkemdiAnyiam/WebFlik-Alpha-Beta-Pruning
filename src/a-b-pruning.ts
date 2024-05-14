@@ -465,17 +465,18 @@ function updateVar(op: 'MAX' | 'MIN', node: TreeNode, potentialNewVal: number): 
 //   for (let i = 0; i < node.actions.length; ++i) {
 //     const action = node.actions[i];
 //     minOrMaxValue(op === 'MAX' ? 'MIN' : 'MAX', action, node.alpha, node.beta);
-//     if ( (op === 'MAX' && action.utility > bestVal) || (op === 'MIN' && action.utility < bestVal) ) {
+//     if (betterUtility(op, action, bestVal)) {
 //       bestVal = action.utility;
 //       bestMove = action;
 //       // if equals or beats variable, cut
-//       if ( ((op === 'MAX' && bestVal >= node.beta) || (op === 'MIN' && bestVal <= node.alpha)) && i+1 < node.actions.length ) {
+//       if ( i+1 < node.actions.length && meetsCutCondition(op, node, bestVal) ) {
 //         [node.utility, node.nextMove] = [bestVal, bestMove];
 //         return;
 //       }
 
 //       if (op === 'MAX') { (node.alpha = Math.max(node.alpha, bestVal)); }
 //       else { (node.beta = Math.min(node.beta, bestVal)) };
+//       updateVar(op, node, bestVal)
 //     }
 //   };
 
