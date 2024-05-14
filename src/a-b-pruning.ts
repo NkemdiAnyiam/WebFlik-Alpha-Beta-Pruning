@@ -21,22 +21,22 @@ const { Entrance, Exit, Emphasis, Motion, Transition, ConnectorSetter, Connector
 
 const timeline = new AnimTimeline({timelineName: 'Alpha-Beta-Pruning', debugMode: true});
 
-export class TreeNode {
+export class MinMaxNode {
   readonly id: number;
   static id: number = 0;
   alpha: number = -Infinity;
   beta: number = Infinity;
-  nextMove: TreeNode | null = null;
-  parent: TreeNode | null = null;
+  nextMove: MinMaxNode | null = null;
+  parent: MinMaxNode | null = null;
   get isTerminal(): boolean { return this.actions.length === 0; }
 
-  constructor(public utility: number, public actions: TreeNode[], public depth: number, public index: number) {
-    this.id = TreeNode.id++;
+  constructor(public utility: number, public actions: MinMaxNode[], public depth: number, public index: number) {
+    this.id = MinMaxNode.id++;
   }
 }
 
-export function createNodes(dataStruct: any[], depth = 0, index = 0): TreeNode {
-  const node = new TreeNode(
+export function createNodes(dataStruct: any[], depth = 0, index = 0): MinMaxNode {
+  const node = new MinMaxNode(
     typeof dataStruct[0] === 'number' ? dataStruct[0] : NaN,
     dataStruct[0] instanceof Array ? dataStruct.map((action, i) => createNodes(action, depth + 1, i)) : [],
     depth,
@@ -47,9 +47,9 @@ export function createNodes(dataStruct: any[], depth = 0, index = 0): TreeNode {
   return node;
 }
 
-export function alphaBetaSearch(root: TreeNode) {
+export function alphaBetaSearch(root: MinMaxNode) {
   minOrMaxValue('MAX', root, -Infinity, Infinity);
-  let currNode: TreeNode | null = root;
+  let currNode: MinMaxNode | null = root;
   let seq = new AnimSequence({description: `Trace solution path`});
   while(currNode?.nextMove) {
     const solnConnector = document.querySelector(`.subtree__connector--solution[data-to-id="${currNode.nextMove?.id}"]`) as WbfkConnector;
@@ -63,7 +63,7 @@ export function alphaBetaSearch(root: TreeNode) {
   return root;
 }
 
-function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: number): void {
+function minOrMaxValue(op: 'MIN' | 'MAX', node: MinMaxNode, alpha: number, beta: number): void {
   if (node.isTerminal) {
     const subtreeEl = document.querySelector(`[data-id="${node.id}"]`)!
     const subtreeNodeUtilityEl = subtreeEl.querySelector(`.subtree__node-utility`)!;
@@ -409,21 +409,21 @@ const textChange = (domElem: Element | null, newInnerHtml: string) => {
 
 
 // HELPER FUNCTIONS
-function betterUtility(op: 'MAX' | 'MIN', action: TreeNode, currentBest: number): boolean {
+function betterUtility(op: 'MAX' | 'MIN', action: MinMaxNode, currentBest: number): boolean {
   switch(op) {
     case "MAX": return action.utility > currentBest;
     case "MIN": return action.utility < currentBest;
   }
 }
 
-function meetsCutCondition(op: 'MAX' | 'MIN', node: TreeNode, bestUtility: number): boolean {
+function meetsCutCondition(op: 'MAX' | 'MIN', node: MinMaxNode, bestUtility: number): boolean {
   switch(op) {
     case "MAX": return bestUtility >= node.beta;
     case "MIN": return bestUtility <= node.alpha;
   }
 }
 
-function updateVar(op: 'MAX' | 'MIN', node: TreeNode, potentialNewVal: number): boolean {
+function updateVar(op: 'MAX' | 'MIN', node: MinMaxNode, potentialNewVal: number): boolean {
   switch(op) {
     case "MAX":
       if (node.alpha < potentialNewVal) {
@@ -452,7 +452,7 @@ function updateVar(op: 'MAX' | 'MIN', node: TreeNode, potentialNewVal: number): 
 
 
 
-// function minOrMaxValue(op: 'MIN' | 'MAX', node: TreeNode, alpha: number, beta: number): void {
+// function minOrMaxValue(op: 'MIN' | 'MAX', node: MinMaxNode, alpha: number, beta: number): void {
 //   if (node.isTerminal) {
 //     return;
 //   }

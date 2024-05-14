@@ -1,4 +1,4 @@
-import { TreeNode } from "./a-b-pruning";
+import { MinMaxNode } from "./a-b-pruning";
 import { cloneTemplate, removeTemplate } from "./utils";
 import { WebFlik, WbfkConnector, AnimSequence } from "./WebFlik";
 
@@ -11,7 +11,7 @@ const {
 
 const tree = document.querySelector('.tree-container');
 
-export function sceneCreator(root: TreeNode) {
+export function sceneCreator(root: MinMaxNode) {
   const subtreeEl = buildTreeR(root, 'MAX');
 
   tree?.insertAdjacentElement('beforeend', subtreeEl);
@@ -22,7 +22,7 @@ export function sceneCreator(root: TreeNode) {
   // removeTemplate('strike-through');
 }
 
-function buildTreeR(node: TreeNode, nodeType: 'MIN' | 'MAX') {
+function buildTreeR(node: MinMaxNode, nodeType: 'MIN' | 'MAX') {
   const subtreeEl = cloneTemplate('subtree');
   // subtreeEl.dataset.depth = `${node.depth}`;
   // subtreeEl.dataset.index = `${node.index}`;
