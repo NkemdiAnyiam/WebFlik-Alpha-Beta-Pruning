@@ -29,8 +29,11 @@ type KeyframeTimingOptions = {
 }
 
 export type AnimBlockConfig = KeyframeTimingOptions & CustomKeyframeEffectOptions;
+export type EntranceBlockConfig = AnimBlockConfig & {
+  hideFirst: 'display-none' | 'visibility-hidden' | null;
+};
 export type ExitBlockConfig = AnimBlockConfig & {
-  exitType: 'display-none' | 'visibility-hidden'
+  exitType: 'display-none' | 'visibility-hidden';
 };
 export type TransitionBlockConfig = AnimBlockConfig & {
   removeInlineStylesOnFinish: boolean;
@@ -39,8 +42,8 @@ export type TransitionBlockConfig = AnimBlockConfig & {
 type Segment = [
   endDelay: number,
   callbacks: ((...args: any[]) => void)[],
-  roadblocks: Promise<unknown>[],
-  integrityblocks: Promise<unknown>[],
+  roadblocks: (Promise<unknown> | (() => Promise<unknown>))[],
+  integrityblocks: (Promise<unknown> | (() => Promise<unknown>))[],
   // true when awaiting delay/endDelay periods while the awaited delay/endDelay duration is 0
   skipEndDelayUpdation: boolean,
   header: Partial<{
@@ -187,10 +190,14 @@ export class WebFlikAnimation extends Animation {
       if (roadblocks.length > 0) {
         this.pauseForRoadblocks();
         roadblocked = true;
-        await Promise.all(roadblocks);
+        // for any functions, replace the entry with the return value (a promise)
+        await Promise.all(roadblocks.map(rBlock => typeof rBlock === 'function' ? rBlock() : rBlock));
       }
-      if (integrityblocks.length > 0) { await Promise.all(integrityblocks); }
-      // Call all callbacks that awaited the completions of this phase
+      if (integrityblocks.length > 0) {
+        // for any functions, replace the entry with the return value (a promise)
+        await Promise.all(integrityblocks.map(iBlock => typeof iBlock === 'function' ? iBlock() : iBlock));
+      }
+      // Call all callbacks that awaited the completion of this phase
       for (const callback of callbacks) { callback(); }
 
       // extra await allows additional pushes to preempt next segment when they should
@@ -265,12 +272,6 @@ export class WebFlikAnimation extends Animation {
   // accepts a time to wait for (converted to an endDelay) and returns a Promise that is resolved at that time
   generateTimePromise(
     direction: 'forward' | 'backward',
-    phase: 'delayPhase' | 'activePhase' | 'endDelayPhase',
-    timePosition: number | 'beginning' | 'end' | `${number}%`,
-  ): Promise<void>;
-  generateTimePromise( direction: 'forward' | 'backward', phase: 'whole', timePosition: number | `${number}%`, ): Promise<void>;
-  generateTimePromise(
-    direction: 'forward' | 'backward',
     phase: 'delayPhase' | 'activePhase' | 'endDelayPhase' | 'whole',
     timePosition: number | 'beginning' | 'end' | `${number}%`,
   ): Promise<void> {
@@ -322,37 +323,23 @@ export class WebFlikAnimation extends Animation {
     });
   }
 
-  addIntegrityblocks(
-    direction: 'forward' | 'backward',
-    phase: 'delayPhase' | 'activePhase' | 'endDelayPhase',
-    timePosition: number | 'beginning' | 'end' | `${number}%`,
-    ...promises: Promise<unknown>[]
-  ): void;
-  addIntegrityblocks(direction: 'forward' | 'backward', phase: 'whole', timePosition: number | `${number}%`, ...promises: Promise<unknown>[]): void;
   /**@internal*/
   addIntegrityblocks(
     direction: 'forward' | 'backward',
     phase: 'delayPhase' | 'activePhase' | 'endDelayPhase' | 'whole',
     timePosition: number | 'beginning' | 'end' | `${number}%`,
-    ...promises: Promise<unknown>[]
+    promises: (Promise<unknown> | (() => Promise<unknown>))[]
   ): void {
-    this.addAwaiteds(direction, phase, timePosition, 'integrityblock', ...promises);
+    this.addAwaiteds(direction, phase, timePosition, 'integrityblock', promises);
   }
 
   addRoadblocks(
     direction: 'forward' | 'backward',
-    phase: 'delayPhase' | 'activePhase' | 'endDelayPhase',
-    timePosition: number | 'beginning' | 'end' | `${number}%`,
-    ...promises: Promise<unknown>[]
-  ): void;
-  addRoadblocks(direction: 'forward' | 'backward', phase: 'whole', timePosition: number | `${number}%`, ...promises: Promise<unknown>[]): void;
-  addRoadblocks(
-    direction: 'forward' | 'backward',
     phase: 'delayPhase' | 'activePhase' | 'endDelayPhase' | 'whole',
     timePosition: number | 'beginning' | 'end' | `${number}%`,
-    ...promises: Promise<unknown>[]
+    promises: (Promise<unknown> | (() => Promise<unknown>))[]
   ): void {
-    this.addAwaiteds(direction, phase, timePosition, 'roadblock', ...promises);
+    this.addAwaiteds(direction, phase, timePosition, 'roadblock', promises);
   }
 
   private addAwaiteds(
@@ -360,7 +347,7 @@ export class WebFlikAnimation extends Animation {
     phase: 'delayPhase' | 'activePhase' | 'endDelayPhase' | 'whole',
     timePosition: number | 'beginning' | 'end' | `${number}%`,
     awaitedType: 'integrityblock' | 'roadblock',
-    ...promises: Promise<unknown>[]
+    promises: (Promise<unknown> | (() => Promise<unknown>))[]
   ): void {
     // if the animation is already finished in the given direction, do nothing
     if (this.isFinished && this.direction === direction) {
@@ -689,6 +676,7 @@ export abstract class AnimBlock<TBankEntry extends AnimationBankEntry = Animatio
       this.generateError
     );
 
+    // TODO: Figure out how to disable any pausing/stepping functionality in the timeline while stopped for roadblocks
     this.animation.pauseForRoadblocks = () => {
       if (this.parentSequence) { this.parentSequence.pause(); }
       else { this.pause(); }
@@ -981,14 +969,33 @@ export abstract class AnimBlock<TBankEntry extends AnimationBankEntry = Animatio
   }
 }
 
-export class EntranceBlock<TBankEntry extends AnimationBankEntry = AnimationBankEntry> extends AnimBlock<TBankEntry> {
+export class EntranceBlock<TBankEntry extends AnimationBankEntry<EntranceBlock, EntranceBlockConfig> = AnimationBankEntry> extends AnimBlock<TBankEntry> {
   private backwardsHidingMethod: ExitBlockConfig['exitType'] = '' as ExitBlockConfig['exitType'];
 
-  protected get defaultConfig(): Partial<AnimBlockConfig> {
+  protected get defaultConfig(): Partial<EntranceBlockConfig> {
     return {
       commitsStyles: false,
       pregeneratesKeyframes: true,
+      hideFirst: null,
     };
+  }
+
+  /**@internal*/initialize(animArgs: GeneratorParams<TBankEntry>, userConfig: Partial<EntranceBlockConfig> = {}) {
+    super.initialize(animArgs, userConfig);
+
+    const initialHidingType = userConfig.hideFirst ?? this.bankEntry.config?.hideFirst ?? this.defaultConfig.hideFirst!;
+    switch(initialHidingType) {
+      case "display-none":
+        this.domElem.classList.add('wbfk-hidden');
+        break;
+      case "visibility-hidden":
+        this.domElem.classList.add('wbfk-invisible');
+        break;
+      default:
+        break;
+    }
+
+    return this;
   }
 
   protected _onStartForward(): void {
@@ -1036,6 +1043,7 @@ export class EntranceBlock<TBankEntry extends AnimationBankEntry = AnimationBank
   }
 }
 
+// TODO: prevent already hidden blocks from being allowed to use exit animation
 export class ExitBlock<TBankEntry extends AnimationBankEntry<ExitBlock, ExitBlockConfig> = AnimationBankEntry> extends AnimBlock<TBankEntry> {
   private exitType: ExitBlockConfig['exitType'] = '' as ExitBlockConfig['exitType'];
 

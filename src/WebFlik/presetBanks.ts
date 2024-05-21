@@ -1,4 +1,4 @@
-import { TransitionBlock, EmphasisBlock, EntranceBlock, ExitBlock, ScrollerBlock, MotionBlock, ExitBlockConfig, TransitionBlockConfig } from "./AnimBlock";
+import { TransitionBlock, EmphasisBlock, EntranceBlock, ExitBlock, ScrollerBlock, MotionBlock, ExitBlockConfig, TransitionBlockConfig, EntranceBlockConfig } from "./AnimBlock";
 import { ConnectorEntranceBlock, ConnectorExitBlock } from "./AnimBlockLine";
 import { AnimationBank } from "./WebFlik";
 import { computeSelfScrollingBounds, negateNumString, overrideHidden, splitXYAlignmentString, splitXYTupleString, unOverrideHidden } from "./utils/helpers";
@@ -53,7 +53,8 @@ export const presetEntrances = {
           case 'from-top-right': return `${computeOrthoDist('from-right')}px ${computeOrthoDist('from-top')}px`;
           case 'from-bottom-left': return `${computeOrthoDist('from-left')}px ${computeOrthoDist('from-bottom')}px`;
           case 'from-bottom-right': return `${computeOrthoDist('from-right')}px ${computeOrthoDist('from-bottom')}px`;
-          default: throw new RangeError(`Invalid fromDirection "${direction}". Must be "from-left", "from-right", "from-top", "from-bottom", "from-top-left", "from-top-right", "from-bottom-left", or "from-bottom-right".`);
+          default: throw new RangeError(`Invalid fromDirection "${direction}". Must be "from-left", "from-right", "from-top",`
+            + ` "from-bottom", "from-top-left", "from-top-right", "from-bottom-left", or "from-bottom-right".`);
         }
       };
 
@@ -132,7 +133,7 @@ export const presetEntrances = {
   },
 
   // invalidProperty: 5,
-} satisfies AnimationBank<EntranceBlock>;
+} satisfies AnimationBank<EntranceBlock, EntranceBlockConfig>;
 
 
 export const presetExits = {
@@ -366,7 +367,8 @@ export const presetMotions = {
         [{translate: `calc(${translateX} + ${offsetSelfX}) calc(${translateY} + ${offsetSelfY})`}],
   
         // backward
-        [{translate: `calc(${negateNumString(translateX)} + ${negateNumString(offsetSelfX)}) calc(${negateNumString(translateY)} + ${negateNumString(offsetSelfY)})`}],
+        [{translate: `calc(${negateNumString(translateX)} + ${negateNumString(offsetSelfX)})`
+                   + ` calc(${negateNumString(translateY)} + ${negateNumString(offsetSelfY)})`}],
       ];
     },
   },

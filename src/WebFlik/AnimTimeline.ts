@@ -1,4 +1,5 @@
 import { AnimSequence } from "./AnimSequence";
+import { findLastIndex } from "./utils/helpers";
 
 type AnimTimelineConfig = {
   debugMode: boolean;
@@ -49,25 +50,25 @@ class WbfkPlaybackButton extends HTMLElement {
     let buttonShapeHtmlStr: string;
     switch(action) {
       case "step-forward":
-        buttonShapeHtmlStr = `<polygon points="22.468 81.83 67.404 40.915 22.468 0 22.468 81.83"/>`;
+        buttonShapeHtmlStr = /*html*/`<polygon points="22.468 81.83 67.404 40.915 22.468 0 22.468 81.83"/>`;
         break;
       case "step-backward":
-        buttonShapeHtmlStr = `<polygon points="59.362 81.83 14.426 40.915 59.362 0 59.362 81.83"/>`;
+        buttonShapeHtmlStr = /*html*/`<polygon points="59.362 81.83 14.426 40.915 59.362 0 59.362 81.83"/>`;
         break;
       case "pause":
-        buttonShapeHtmlStr = `<path d="M13.753,0h17.43V81.83H13.753ZM49.974,81.83H67.4V0H49.974Z"/>`;
+        buttonShapeHtmlStr = /*html*/`<path d="M13.753,0h17.43V81.83H13.753ZM49.974,81.83H67.4V0H49.974Z"/>`;
         break;
       case "fast-forward":
-        buttonShapeHtmlStr = `<path d="M0,0,36.936,40.915,0,81.83ZM44.936,81.83,81.872,40.915,44.936,0Z"/>`;
+        buttonShapeHtmlStr = /*html*/`<path d="M0,0,36.936,40.915,0,81.83ZM44.936,81.83,81.872,40.915,44.936,0Z"/>`;
         break;
       case "toggle-skipping":
-        buttonShapeHtmlStr = `<path d="M0,0,23.866,17.34,0,34.681ZM28.982,34.681,52.848,17.34,28.982,0Zm28.982,0L81.83,17.34,57.964,0ZM81.83,47.149,57.964,64.489,81.83,81.83Zm-28.982,0L28.982,64.489,52.848,81.83Zm-28.982,0L0,64.489,23.866,81.83Z"/>`;
+        buttonShapeHtmlStr = /*html*/`<path d="M0,0,23.866,17.34,0,34.681ZM28.982,34.681,52.848,17.34,28.982,0Zm28.982,0L81.83,17.34,57.964,0ZM81.83,47.149,57.964,64.489,81.83,81.83Zm-28.982,0L28.982,64.489,52.848,81.83Zm-28.982,0L0,64.489,23.866,81.83Z"/>`;
         break;
       default: throw new RangeError(`Invalid 'action' attribute value "${action}" for WebFlik playback button. Must be "step-forward", "step-backward", "pause", "fast-forward", or "toggle-skipping".`);
     }
     this.action = action;
 
-    const htmlString = `
+    const htmlString = /*html*/`
       <style>
         :host {
           width: 25.6px;
@@ -249,12 +250,21 @@ export class AnimTimeline {
     }
   }
 
-  setupPlaybackControls(): typeof this.playbackButtons {
-    const forwardButton: WbfkPlaybackButton | null = document.querySelector(`wbfk-playback-button[action="step-forward"][timeline-name="${this.config.timelineName}"]`);
-    const backwardButton: WbfkPlaybackButton | null = document.querySelector(`wbfk-playback-button[action="step-backward"][timeline-name="${this.config.timelineName}"]`);
-    const pauseButton: WbfkPlaybackButton | null = document.querySelector(`wbfk-playback-button[action="pause"][timeline-name="${this.config.timelineName}"]`);
-    const fastForwardButton: WbfkPlaybackButton | null = document.querySelector(`wbfk-playback-button[action="fast-forward"][timeline-name="${this.config.timelineName}"]`);
-    const toggleSkippingButton: WbfkPlaybackButton | null = document.querySelector(`wbfk-playback-button[action="toggle-skipping"][timeline-name="${this.config.timelineName}"]`);
+  setupPlaybackControls(root?: HTMLElement): typeof this.playbackButtons {
+    const potentialButtonsContainer = (root ?? document).querySelector(`[timeline-name="${this.config.timelineName}"]`);
+
+    // find the button if it has the correct timeline-name directly on it
+    const getButtonDirect = (action: WbfkPlaybackButton['action']) => (root ?? document).querySelector<WbfkPlaybackButton>(`wbfk-playback-button[action="${action}"][timeline-name="${this.config.timelineName}"]`);
+    // find the button if it is nested in a container with the correct timeline-name and does not have a timeline-name of its own
+    const getButtonGroupChild = (action: WbfkPlaybackButton['action']) => potentialButtonsContainer?.querySelector<WbfkPlaybackButton>(`wbfk-playback-button[action="${action}"]:not([timeline-name])`) ?? null;
+    // search for button directly, then search for child of button group
+    const getButton = (action: WbfkPlaybackButton['action']) => getButtonDirect(action) ?? getButtonGroupChild(action) ?? null;
+
+    const forwardButton = getButton("step-forward");
+    const backwardButton = getButton("step-backward");
+    const pauseButton = getButton("pause");
+    const fastForwardButton = getButton("fast-forward");
+    const toggleSkippingButton = getButton("toggle-skipping");
 
     if (forwardButton) {
       forwardButton.activate = () => {
@@ -491,9 +501,9 @@ export class AnimTimeline {
   }
 
   // immediately skips to first AnimSequence in animSequences with either matching tag field or position
-  async skipTo(options: Partial<{tag: string, position: never, offset: number}>): Promise<void>;
+  async skipTo(options: Partial<{tag: string | RegExp, position: never, offset: number}>, direction?: 'forward' | 'backward' | 'scan'): Promise<void>;
   async skipTo(options: Partial<{tag: never, position: 'beginning' | 'end', offset: number}>): Promise<void>;
-  async skipTo(options: Partial<{tag: string, position: 'beginning' | 'end', offset: number}> = {}): Promise<void> {
+  async skipTo(options: Partial<{tag: string | RegExp, position: 'beginning' | 'end', offset: number}> = {}, direction: 'forward' | 'backward' | 'scan' = 'scan'): Promise<void> {
     if (this.isAnimating) { throw new Error('Cannot use skipTo() while currently animating.'); }
     // Calls to skipTo() must be separated using await or something that similarly prevents simultaneous execution of code
     if (this.usingSkipTo) { throw new Error('Cannot perform simultaneous calls to skipTo() in timeline.'); }
@@ -515,12 +525,25 @@ export class AnimTimeline {
     if (!Number.isSafeInteger(offset)) { throw new TypeError(`Invalid offset "${offset}". Value must be an integer.`); }
 
     let targetIndex: number;
+    let sequencesSubset: AnimSequence[] = [];
+    switch(direction) {
+      case "forward":
+        sequencesSubset = this.animSequences.slice(this.loadedSeqIndex + 1);
+        break;
+      case "backward":
+        sequencesSubset = this.animSequences.slice(0, this.loadedSeqIndex);
+        break;
+      case "scan":
+      default:
+        sequencesSubset = this.animSequences;
+    }
 
     // find target index based on finding sequence with matching tag
     if (tag) {
       // get loadedSeqIndex corresponding to matching AnimSequence
-      targetIndex = this.animSequences.findIndex(animSequence => animSequence.getTag() === tag) + offset;
-      if (targetIndex - offset === -1) { throw new Error(`Tag name "${tag}" not found.`); }
+      const sequenceInset = direction === 'forward' ? this.loadedSeqIndex + 1 : 0;
+      targetIndex = findLastIndex(sequencesSubset, animSequence => tag instanceof RegExp ? !!animSequence.getTag().match(tag) : animSequence.getTag() === tag) + sequenceInset + offset;
+      if (targetIndex - sequenceInset - offset === -1) { throw new Error(`Tag name "${tag}" not found.`); }
     }
     // find target index based on either the beginning or end of the timeline
     else {

@@ -1,4 +1,4 @@
-import { AnimBlock, EntranceBlock, ExitBlock, EmphasisBlock, AnimBlockConfig, MotionBlock, ScrollerBlock, TransitionBlock, ExitBlockConfig } from "./AnimBlock";
+import { AnimBlock, EntranceBlock, ExitBlock, EmphasisBlock, AnimBlockConfig, MotionBlock, ScrollerBlock, TransitionBlock, ExitBlockConfig, EntranceBlockConfig } from "./AnimBlock";
 import { ConnectorEntranceBlock, ConnectorExitBlock, WbfkConnector, ConnectorSetterBlock, WbfkConnectorConfig } from "./AnimBlockLine";
 import { presetEntrances, presetExits, presetEmphases, presetMotions, presetConnectorEntrances, presetConnectorExits, presetScrolls, presetTransitions } from "./presetBanks";
 import { useEasing } from "./utils/easing";
@@ -68,7 +68,7 @@ class _WebFlik {
   >
   (
     customBankAddons: {
-      entrances?: UserEntranceBank & AnimationBank<EntranceBlock>;
+      entrances?: UserEntranceBank & AnimationBank<EntranceBlock, EntranceBlockConfig>;
       exits?: UserExitBank & AnimationBank<ExitBlock, ExitBlockConfig>;
       emphases?: UserEmphasisBank & AnimationBank<EmphasisBlock>;
       motions?: UserMotionBank & AnimationBank<MotionBlock>;
@@ -183,8 +183,8 @@ class _WebFlik {
 
 export const WebFlik = new _WebFlik();
 
-createStyles(`
-/* Using :where makes it possible to easily for developer to override the default color */
+createStyles(/*css*/`
+/* Using :where makes it possible for developer to easily override the default color */
 :where(:root) {
   --wbfk-highlight-color: #F9F278;
   --wbfk-playback-button-press-color: #db0000;
