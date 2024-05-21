@@ -6,7 +6,8 @@
   "scripts": {
     "pre-start": "rm -rf ./.parcel-cache ./.cache ./dist",
     "start": "npm run pre-start && npx parcel index.html --no-cache",
-    "clean-up": "rm -rf ./.parcel-cache ./.cache ./dist ./node_modules"
+    "clean-up": "rm -rf ./.parcel-cache ./.cache ./dist ./node_modules",
+    "build": "npx parcel@2.7.0 build --dist-dir ./build index.html"
   },
   "author": "",
   "license": "ISC"
