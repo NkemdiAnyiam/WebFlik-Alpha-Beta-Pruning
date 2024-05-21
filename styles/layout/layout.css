@@ -11,7 +11,7 @@ h1 {
 }
 
 main {
-  width: 150%;
+  width: calc(100% + 100rem);
 }
 
 .viz {
