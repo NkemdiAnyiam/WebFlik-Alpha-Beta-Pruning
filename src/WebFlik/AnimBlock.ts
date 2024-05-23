@@ -573,7 +573,7 @@ export abstract class AnimBlock<TBankEntry extends AnimationBankEntry = Animatio
   get activeFinishTime() { return( this.fullStartTime + this.delay + this.duration) / this.playbackRate; }
   get fullFinishTime() { return (this.fullStartTime + this.delay + this.duration + this.endDelay) / this.playbackRate; }
 
-  constructor(domElem: Element | null, public animName: string, bank: AnimationBank, public category: AnimationCategory) {
+  constructor(domElem: Element | null | undefined, public animName: string, bank: AnimationBank, public category: AnimationCategory) {
     this.id = AnimBlock.id++;
     
     if ((category === 'Entrance' || category === 'Exit') && domElem instanceof WbfkConnector) {
@@ -678,11 +678,13 @@ export abstract class AnimBlock<TBankEntry extends AnimationBankEntry = Animatio
 
     // TODO: Figure out how to disable any pausing/stepping functionality in the timeline while stopped for roadblocks
     this.animation.pauseForRoadblocks = () => {
-      if (this.parentSequence) { this.parentSequence.pause(); }
+      if (this.parentTimeline) { this.parentTimeline.pause(); }
+      else if (this.parentSequence) { this.parentSequence.pause(); }
       else { this.pause(); }
     }
     this.animation.unpauseFromRoadblocks = () => {
-      if (this.parentSequence) { this.parentSequence.unpause(); }
+      if (this.parentTimeline) { this.parentTimeline.unpause(); }
+      else if (this.parentSequence) { this.parentSequence.unpause(); }
       else { this.unpause(); }
     }
 
