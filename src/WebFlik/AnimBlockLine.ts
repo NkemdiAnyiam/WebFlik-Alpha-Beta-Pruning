@@ -1,8 +1,8 @@
 import { AnimBlock, AnimBlockConfig } from "./AnimBlock";
 import { AnimationBank, AnimationBankEntry } from "./WebFlik";
 import { CustomErrors } from "./utils/errors";
-import { equalWithinTol, overrideHidden, parseConnectorOffset, unOverrideHidden } from "./utils/helpers";
-import { AnimationCategory, parsedConnectorOffset, EndpointXPlacement, EndpointYPlacement } from "./utils/interfaces";
+import { equalWithinTol, overrideHidden, parseMultiUnitPlacement, unOverrideHidden } from "./utils/helpers";
+import { AnimationCategory, ParsedMultiUnitPlacement, MultiUnitPlacementX, MultiUnitPlacementY } from "./utils/interfaces";
 
 export type WbfkConnectorConfig = {
   pointTrackingEnabled: boolean;
@@ -41,8 +41,8 @@ export class WbfkConnector extends HTMLElement {
   private mask: SVGMaskElement;
   get lineElement(): Readonly<SVGLineElement> { return this.lineLayer; }
 
-  pointA: [elemA: Element, xPlacement: parsedConnectorOffset, yPlacement: parsedConnectorOffset] = [document.body, [0,0], [0,0]];
-  pointB: [elemB: Element, xPlacement: parsedConnectorOffset, yPlacement: parsedConnectorOffset] = [document.body, [0,100], [0,100]];
+  pointA: [elemA: Element, xPlacement: ParsedMultiUnitPlacement, yPlacement: ParsedMultiUnitPlacement] = [document.body, [0,0], [0,0]];
+  pointB: [elemB: Element, xPlacement: ParsedMultiUnitPlacement, yPlacement: ParsedMultiUnitPlacement] = [document.body, [0,100], [0,100]];
   pointTrackingEnabled: boolean = true;
   private continuousTrackingReqId: number = NaN;
 
@@ -315,10 +315,10 @@ customElements.define('wbfk-connector', WbfkConnector);
 
 export class ConnectorSetterBlock extends AnimBlock {
   domElem: WbfkConnector;
-  previousPointA?: [elemA: Element, xPlacement: parsedConnectorOffset, yPlacement: parsedConnectorOffset];
-  previousPointB?: [elemB: Element, xPlacement: parsedConnectorOffset, yPlacement: parsedConnectorOffset];
-  pointA: [elemA: Element, xPlacement: parsedConnectorOffset, yPlacement: parsedConnectorOffset] | 'use-preserved';
-  pointB: [elemB: Element, xPlacement: parsedConnectorOffset, yPlacement: parsedConnectorOffset] | 'use-preserved';
+  previousPointA?: [elemA: Element, xPlacement: ParsedMultiUnitPlacement, yPlacement: ParsedMultiUnitPlacement];
+  previousPointB?: [elemB: Element, xPlacement: ParsedMultiUnitPlacement, yPlacement: ParsedMultiUnitPlacement];
+  pointA: [elemA: Element, xPlacement: ParsedMultiUnitPlacement, yPlacement: ParsedMultiUnitPlacement] | 'use-preserved';
+  pointB: [elemB: Element, xPlacement: ParsedMultiUnitPlacement, yPlacement: ParsedMultiUnitPlacement] | 'use-preserved';
 
   connectorConfig: WbfkConnectorConfig = {} as WbfkConnectorConfig;
   previousConnectorConfig: WbfkConnectorConfig = {} as WbfkConnectorConfig;
@@ -326,15 +326,15 @@ export class ConnectorSetterBlock extends AnimBlock {
     return {
       duration: 0,
       commitsStyles: false,
-      pregeneratesKeyframes: true,
+      runGeneratorsNow: true,
       startsNextBlock: true,
     };
   }
   
   constructor(
     connectorElem: WbfkConnector | null | undefined,
-    pointA: [elemA: Element | null | undefined, xPlacement: number | EndpointXPlacement, yPlacement: number | EndpointYPlacement] | ['preserve'],
-    pointB: [elemB: Element | null | undefined, xPlacement: number | EndpointXPlacement, yPlacement: number | EndpointYPlacement] | ['preserve'],
+    pointA: [elemA: Element | null | undefined, xPlacement: number | MultiUnitPlacementX, yPlacement: number | MultiUnitPlacementY] | ['preserve'],
+    pointB: [elemB: Element | null | undefined, xPlacement: number | MultiUnitPlacementX, yPlacement: number | MultiUnitPlacementY] | ['preserve'],
     animName: string,
     bank: AnimationBank,
     category: AnimationCategory,
@@ -354,8 +354,8 @@ export class ConnectorSetterBlock extends AnimBlock {
     }
 
     this.domElem = connectorElem;
-    this.pointA = pointA[0] === 'preserve' ? 'use-preserved' : [pointAElement, parseConnectorOffset(pointA[1], 'horizontal'), parseConnectorOffset(pointA[2], 'vertical')];
-    this.pointB = pointB[0] === 'preserve' ? 'use-preserved' : [pointBElement, parseConnectorOffset(pointB[1], 'horizontal'), parseConnectorOffset(pointB[2], 'vertical')];
+    this.pointA = pointA[0] === 'preserve' ? 'use-preserved' : [pointAElement, parseMultiUnitPlacement(pointA[1], 'horizontal'), parseMultiUnitPlacement(pointA[2], 'vertical')];
+    this.pointB = pointB[0] === 'preserve' ? 'use-preserved' : [pointBElement, parseMultiUnitPlacement(pointB[1], 'horizontal'), parseMultiUnitPlacement(pointB[2], 'vertical')];
 
     this.connectorConfig = this.applyLineConfig(connectorConfig);
   }
@@ -389,7 +389,7 @@ export class ConnectorEntranceBlock<TBankEntry extends AnimationBankEntry = Anim
   protected get defaultConfig(): Partial<AnimBlockConfig> {
     return {
       commitsStyles: false,
-      // pregenerateKeyframes: true,
+      // runGeneratorsNow: true,
     };
   }
 
@@ -420,7 +420,7 @@ export class ConnectorExitBlock<TBankEntry extends AnimationBankEntry = Animatio
   protected get defaultConfig(): Partial<AnimBlockConfig> {
     return {
       commitsStyles: false,
-      // pregenerateKeyframes: true,
+      // runGeneratorsNow: true,
     };
   }
 

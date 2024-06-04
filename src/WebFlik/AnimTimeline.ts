@@ -216,7 +216,7 @@ export class AnimTimeline {
   skippingOn = false; // used to determine whether or not all animations should be instantaneous
   isPaused = false;
   currDirection: 'forward' | 'backward' = 'forward'; // set to 'forward' after stepForward() or 'backward' after stepBackward()
-  usingSkipTo = false; // true if currently using skipTo()
+  usingJumpTo = false; // true if currently using jumpTo()
   playbackRate = 1;
   config: AnimTimelineConfig;
   // CHANGE NOTE: AnimTimeline now stores references to in-progress sequences and also does not act directly on individual animations
@@ -500,74 +500,127 @@ export class AnimTimeline {
     return autorewindPrevious;
   }
 
-  // immediately skips to first AnimSequence in animSequences with either matching tag field or position
-  async skipTo(options: Partial<{tag: string | RegExp, position: never, offset: number}>, direction?: 'forward' | 'backward' | 'scan'): Promise<void>;
-  async skipTo(options: Partial<{tag: never, position: 'beginning' | 'end', offset: number}>): Promise<void>;
-  async skipTo(options: Partial<{tag: string | RegExp, position: 'beginning' | 'end', offset: number}> = {}, direction: 'forward' | 'backward' | 'scan' = 'scan'): Promise<void> {
-    if (this.isAnimating) { throw new Error('Cannot use skipTo() while currently animating.'); }
-    // Calls to skipTo() must be separated using await or something that similarly prevents simultaneous execution of code
-    if (this.usingSkipTo) { throw new Error('Cannot perform simultaneous calls to skipTo() in timeline.'); }
-
+  jumpToSequenceTag(
+    tag: string | RegExp,
+    options: Partial<{
+      search: 'forward-from-beginning' | 'backward-from-end' | 'forward' | 'backward';
+      searchOffset: number;
+      targetOffset: number;
+      autoplayDetection: 'forward' | 'backward' | 'none';
+    }> = {},
+  ): Promise<void> {
     const {
-      tag,
-      offset = 0,
-      position
+      search = 'forward-from-beginning',
+      targetOffset = 0,
+      searchOffset = 0,
+      autoplayDetection = 'none',
     } = options;
+    return this.jumpTo({ tag, search, searchOffset, targetOffset, autoplayDetection });
+  }
+
+  jumpToPosition(
+    position: 'beginning' | 'end' | number,
+    options: Partial<{targetOffset: number; autoplayDetection: 'forward' | 'backward' | 'none';}> = {},
+  ): Promise<void> {
+    const {
+      targetOffset = 0,
+      autoplayDetection = 'none',
+    } = options;
+    return this.jumpTo({ position, targetOffset, autoplayDetection });
+  }
+
+  // immediately jumps to an AnimSequence in animSequences with the matching search arguments
+  private async jumpTo(options: {
+    tag: string | RegExp;
+    search: 'forward' | 'backward' | 'forward-from-beginning' | 'backward-from-end';
+    searchOffset: number;
+    targetOffset: number;
+    autoplayDetection: 'forward' | 'backward' | 'none';
+  }): Promise<void>;
+  private async jumpTo(options: {position: 'beginning' | 'end' | number; targetOffset: number; autoplayDetection: 'forward' | 'backward' | 'none';}): Promise<void>;
+  private async jumpTo(
+    options: { targetOffset: number; autoplayDetection: 'forward' | 'backward' | 'none'; } & (
+      {tag: string | RegExp; search?: 'forward' | 'backward' | 'forward-from-beginning' | 'backward-from-end'; searchOffset?: number; position?: never}
+      | {position: 'beginning' | 'end' | number; tag?: never}
+    ),
+  ): Promise<void> {
+    if (this.isAnimating) { throw new Error('Cannot use jumpTo() while currently animating.'); }
+    // Calls to jumpTo() must be separated using await or something that similarly prevents simultaneous execution of code
+    if (this.usingJumpTo) { throw new Error('Cannot perform simultaneous calls to jumpTo() in timeline.'); }
+
+    const { targetOffset, autoplayDetection, position, tag } = options;
 
     // cannot specify both tag and position
     if (tag !== undefined && position !== undefined) {
-      throw new TypeError(`Skipping must be done while specifying either the tag or the position, not both. Received tag="${tag}" and position="${position}."`);
+      throw new TypeError(`jumpTo() must receive either the tag or the position, not both. Received tag="${tag}" and position="${position}."`);
     }
     // can only specify one of tag or position, not both
     if (tag === undefined && position === undefined) {
-      throw new TypeError(`Skipping must be done while specifying either the tag or the position. Neither were received.`);
+      throw new TypeError(`jumpTo() must receive either the tag or the position. Neither were received.`);
     }
-    if (!Number.isSafeInteger(offset)) { throw new TypeError(`Invalid offset "${offset}". Value must be an integer.`); }
+    if (!Number.isSafeInteger(targetOffset)) { throw new TypeError(`Invalid offset "${targetOffset}". Value must be an integer.`); }
 
     let targetIndex: number;
-    let sequencesSubset: AnimSequence[] = [];
-    switch(direction) {
-      case "forward":
-        sequencesSubset = this.animSequences.slice(this.loadedSeqIndex + 1);
-        break;
-      case "backward":
-        sequencesSubset = this.animSequences.slice(0, this.loadedSeqIndex);
-        break;
-      case "scan":
-      default:
-        sequencesSubset = this.animSequences;
-    }
 
     // find target index based on finding sequence with matching tag
+    // Math.max(0) prevents wrapping
     if (tag) {
-      const tagMatch = (tag: RegExp | string, sequence: AnimSequence): boolean => tag instanceof RegExp ? !!sequence.getTag().match(tag) : sequence.getTag() === tag;
+      const { search = 'forward-from-beginning', searchOffset = 0 } = options;
+      if (!Number.isSafeInteger(targetOffset)) { throw new TypeError(`Invalid searchOffset "${searchOffset}". Value must be an integer.`); }
+      
+      let isBackwardSearch = false;
+      let sequencesSubset: AnimSequence[] = [];
+      switch(search) {
+        case "forward":
+          sequencesSubset = this.animSequences.slice(Math.max(this.loadedSeqIndex + 1 + searchOffset, 0));
+          break;
+        case "backward":
+          sequencesSubset = this.animSequences.slice(0, Math.max(this.loadedSeqIndex + searchOffset, 0));
+          isBackwardSearch = true;
+          break;
+        case "forward-from-beginning":
+          sequencesSubset = this.animSequences.slice(Math.max(searchOffset, 0));
+          break;
+        case "backward-from-end":
+          sequencesSubset = this.animSequences.slice(0, Math.max(this.numSequences + searchOffset));
+          isBackwardSearch = true;
+          break;
+        default:
+          throw new TypeError(`Invalid search value "${search}".`);
+      }
+      let isForwardSearch = !isBackwardSearch;
+      const sequenceMatchesTag = (sequence: AnimSequence, tag: RegExp | string): boolean => tag instanceof RegExp ? !!sequence?.getTag().match(tag) : sequence?.getTag() === tag;
 
-      // get loadedSeqIndex corresponding to matching AnimSequence
-      const sequenceInset = direction === 'forward' ? this.loadedSeqIndex + 1 : 0;
-      targetIndex = (direction === 'backward'
-        ? findLastIndex(sequencesSubset, animSequence => tagMatch(tag, animSequence))
-        : sequencesSubset.findIndex(animSequence => tagMatch(tag, animSequence))
-      )
-        + sequenceInset + offset;
+      // accounts for the number of sequences preceding the target subset
+      const forwardSearchInset = isForwardSearch ? this.numSequences - sequencesSubset.length : 0;
+      // get index corresponding to matching AnimSequence + offset
+      targetIndex = (isBackwardSearch
+        ? findLastIndex(sequencesSubset, animSequence => sequenceMatchesTag(animSequence, tag))
+        : sequencesSubset.findIndex(animSequence => sequenceMatchesTag(animSequence, tag))
+      ) + forwardSearchInset + targetOffset;
 
-      if (targetIndex - sequenceInset - offset === -1) { throw new Error(`Tag name "${tag}" not found.`); }
+      if (targetIndex - forwardSearchInset - targetOffset === -1) { throw new Error(`Sequence tag "${tag}" not found.`); }
     }
     // find target index based on either the beginning or end of the timeline
     else {
-      switch(position!) {
-        case "beginning":
-          targetIndex = 0 + offset;
+      switch(true) {
+        case position === "beginning":
+          targetIndex = 0 + targetOffset;
           break;
-        case "end":
-          targetIndex = this.numSequences + offset;
+        case position === "end":
+          targetIndex = this.numSequences + targetOffset;
           break;
-        default: throw new RangeError(`Invalid skipTo() position "${position}". Must be "beginning" or "end".`);
+        case typeof position === 'number':
+          if (!Number.isSafeInteger(position)) { throw new TypeError(`Invalid position "${position}". When using a number, value must be an integer.`); }
+          targetIndex = position;
+          break;
+        default: throw new RangeError(`Invalid jumpTo() position "${position}". Must be "beginning", "end", or an integer.`);
       }
     }
 
     // check to see if requested target index is within timeline bounds
     {
-      const errorPrefixString = `Skipping to ${tag ? `tag "${tag}"` : `position "${position}"`} with offset "${offset}" goes`;
+      const errorPrefixString = `Jumping to ${tag ? `tag "${tag}"` : `position "${position}"`} with offset "${targetOffset}" goes`;
       const errorPostfixString = `but requested index was ${targetIndex}.`;
       if (targetIndex < 0)
       { throw new RangeError(`${errorPrefixString} before timeline bounds. Minimium index = 0, ${errorPostfixString}`); }
@@ -575,8 +628,8 @@ export class AnimTimeline {
         { throw new RangeError(`${errorPrefixString} ahead of timeline bounds. Max index = ${this.numSequences}, ${errorPostfixString}`); }
     }
 
-    this.usingSkipTo = true;
-    // if paused, then unpause to perform the skipping; then re-pause
+    this.usingJumpTo = true;
+    // if paused, then unpause to perform the jumping; then re-pause
     let wasPaused = this.isPaused;
     if (wasPaused) { this.togglePause(false); }
     // if skipping is not currently enabled, activate skipping button styling
@@ -584,21 +637,61 @@ export class AnimTimeline {
     if (!wasSkipping) { this.playbackButtons.toggleSkippingButton?.styleActivation(); }
 
     // keep skipping forwards or backwards depending on direction of loadedSeqIndex
+
+    const continueAutoplayForward = async () => {
+      while (
+        !this.atEnd
+        && (this.animSequences[this.loadedSeqIndex - 1]?.autoplaysNextSequence || this.animSequences[this.loadedSeqIndex]?.autoplays)
+      ) { await this.stepForward(); }
+    }
+    const continueAutoplayBackward = async () => {
+      while (
+        !this.atBeginning
+        && (this.animSequences[this.loadedSeqIndex - 1]?.autoplaysNextSequence || this.animSequences[this.loadedSeqIndex]?.autoplays)
+      ) { await this.stepBackward(); }
+    }
+
+    // play to the target sequence without playing the sequence
     if (this.loadedSeqIndex <= targetIndex) {
       this.playbackButtons.forwardButton?.styleActivation();
-      while (this.loadedSeqIndex < targetIndex) { await this.stepForward(); } // could be <= to play the sequence as well
+      while (this.loadedSeqIndex < targetIndex) { await this.stepForward(); }
+      switch(autoplayDetection) {
+        // if autoplay detection forward, play as long as the loaded sequence is supposed to be autoplayed
+        case "forward":
+          await continueAutoplayForward();
+          break;
+        // if autoplay detection backward, rewind as long as the loaded sequence is supposed to be autoplayed
+        case "backward":
+          await continueAutoplayBackward();
+          break;
+        case "none": // do nothing
+        default:
+          break;
+      }
       this.playbackButtons.forwardButton?.styleDeactivation();
     }
+    // rewind to the target sequence and rewind the sequence as well
     else {
       this.playbackButtons.backwardButton?.styleActivation();
       while (this.loadedSeqIndex > targetIndex) { await this.stepBackward(); }
-      this.playbackButtons.backwardButton?.styleDeactivation(); // could be tagIndex+1 to prevent the sequence from being undone
+      switch(autoplayDetection) {
+        case "forward":
+          await continueAutoplayForward();
+          break;
+        case "backward":
+          await continueAutoplayBackward();
+          break;
+        case "none": // do nothing
+        default:
+          break;
+      }
+      this.playbackButtons.backwardButton?.styleDeactivation();
     }
 
     if (!wasSkipping) { this.playbackButtons.toggleSkippingButton?.styleDeactivation(); }
     if (wasPaused) { this.togglePause(true); }
 
-    this.usingSkipTo = false;
+    this.usingJumpTo = false;
   }
 
   toggleSkipping(isSkipping?: boolean): boolean;

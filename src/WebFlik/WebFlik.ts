@@ -3,27 +3,36 @@ import { ConnectorEntranceBlock, ConnectorExitBlock, WbfkConnector, ConnectorSet
 import { presetEntrances, presetExits, presetEmphases, presetMotions, presetConnectorEntrances, presetConnectorExits, presetScrolls, presetTransitions } from "./presetBanks";
 import { useEasing } from "./utils/easing";
 import { createStyles } from "./utils/helpers";
-import { EndpointXPlacement, EndpointYPlacement } from "./utils/interfaces";
+import { MultiUnitPlacementX, MultiUnitPlacementY, ScrollingOptions } from "./utils/interfaces";
 
 type KeyframesGenerator<T extends unknown> = {
   generateKeyframes(this: T, ...animArgs: unknown[]): [forward: Keyframe[], backward?: Keyframe[]];
   generateKeyframeGenerators?: never;
   generateRafMutators?: never;
+  generateRafMutatorGenerators?: never;
 };
 type KeyframesFunctionsGenerator<T extends unknown> = {
   generateKeyframes?: never;
   generateKeyframeGenerators(this: T, ...animArgs: unknown[]): [forwardGenerator: () => Keyframe[], backwardGenerator?: () => Keyframe[]];
   generateRafMutators?: never;
+  generateRafMutatorGenerators?: never;
 };
 type RafMutatorsGenerator<T extends unknown> = {
   generateKeyframes?: never;
   generateKeyframeGenerators?: never;
   generateRafMutators(this: T & Readonly<(Pick<AnimBlock, 'computeTween'>)>, ...animArgs: unknown[]): [forwardMutator: () => void, backwardMutator: () => void];
+  generateRafMutatorGenerators?: never;
+};
+type RafMutatorsFunctionsGenerator<T extends unknown> = {
+  generateKeyframes?: never;
+  generateKeyframeGenerators?: never;
+  generateRafMutators?: never;
+  generateRafMutatorGenerators(this: T & Readonly<(Pick<AnimBlock, 'computeTween'>)>, ...animArgs: unknown[]): [forwardGenerator: () => () => void, backwardGenerator: () => () => void];
 };
 
 export type AnimationBankEntry<TBlockThis extends unknown = unknown, TConfig extends unknown = unknown> = Readonly<
   { config?: Partial<TConfig>; }
-  & (KeyframesGenerator<TBlockThis> | KeyframesFunctionsGenerator<TBlockThis> | RafMutatorsGenerator<TBlockThis>)
+  & (KeyframesGenerator<TBlockThis> | KeyframesFunctionsGenerator<TBlockThis> | RafMutatorsGenerator<TBlockThis> | RafMutatorsFunctionsGenerator<TBlockThis>)
 >;
 
 // represents an object where every string key is paired with a KeyframesBankEntry value
@@ -38,7 +47,9 @@ export type GeneratorParams<TBankEntry extends AnimationBankEntry> = Parameters<
 TBankEntry extends KeyframesGenerator<unknown> ? TBankEntry['generateKeyframes'] : (
   TBankEntry extends KeyframesFunctionsGenerator<unknown> ? TBankEntry['generateKeyframeGenerators'] : (
     TBankEntry extends RafMutatorsGenerator<unknown> ? TBankEntry['generateRafMutators'] : (
-      never
+      TBankEntry extends RafMutatorsFunctionsGenerator<unknown> ? TBankEntry['generateRafMutatorGenerators'] : (
+        never
+      )
     )
   )
 )
@@ -56,7 +67,7 @@ class _WebFlik {
   <
    // default = {} ensures intellisense for a given bank still works
    // without specifying the field (why? not sure)
-    UserEntranceBank extends AnimationBank = {},
+    UserEntranceBank extends AnimationBank<EntranceBlock, EntranceBlockConfig> = {},
     UserExitBank extends AnimationBank<ExitBlock, ExitBlockConfig> = {},
     UserEmphasisBank extends AnimationBank = {},
     UserMotionBank extends AnimationBank = {},
@@ -126,8 +137,8 @@ class _WebFlik {
 
       ConnectorSetter: function(
         connectorElem: WbfkConnector,
-        pointA: [elemA: Element | null | undefined, xPlacement: number | EndpointXPlacement, yPlacement: number | EndpointYPlacement] | ['preserve'],
-        pointB: [elemB: Element | null | undefined, xPlacement: number | EndpointXPlacement, yPlacement: number | EndpointYPlacement] | ['preserve'],
+        pointA: [elemA: Element | null | undefined, xPlacement: number | MultiUnitPlacementX, yPlacement: number | MultiUnitPlacementY] | ['preserve'],
+        pointB: [elemB: Element | null | undefined, xPlacement: number | MultiUnitPlacementX, yPlacement: number | MultiUnitPlacementY] | ['preserve'],
         connectorConfig: WbfkConnectorConfig = {} as WbfkConnectorConfig
       ) {
         return new ConnectorSetterBlock(connectorElem, pointA, pointB, `~set-line-points`, {}, 'Connector Setter', connectorConfig).initialize([]);
@@ -151,6 +162,9 @@ class _WebFlik {
     };
   }
 
+  /**@internal */
+  scrollAnchorsStack: [target: Element, scrollOptions: ScrollingOptions][] = [];
+
   get utils() {
     return {
       useEasing,
@@ -164,7 +178,7 @@ class _WebFlik {
       if (!bank) { return; }
       for (const animName in bank) {
         const entry = bank[animName];
-        const generator = entry.generateKeyframes ?? entry.generateKeyframeGenerators ?? entry.generateRafMutators;
+        const generator = entry.generateKeyframes ?? entry.generateKeyframeGenerators ?? entry.generateRafMutators ?? entry.generateRafMutatorGenerators;
         if (generator.toString().match(/^\(.*\) => .*/)) {
           errors.push(`"${animName}"`);
         }
